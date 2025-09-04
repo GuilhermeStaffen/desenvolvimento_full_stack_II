@@ -46,7 +46,7 @@ const productController = {
       const { id } = req.params;
       const deleted = await Product.destroy({ where: { id } });
       if (!deleted) return res.status(404).json({ error: 'Produto não encontrado.' });
-      res.json({ deletedID: id });
+      res.json({ deletedID: id, message: 'Excluído com sucesso' });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
