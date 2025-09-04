@@ -1,4 +1,5 @@
 const { Product } = require('../models');
+const { Op } = require('sequelize');
 
 const productController = {
   async create(req, res) {
@@ -49,15 +50,34 @@ const productController = {
 
   async list(req, res) {
     try {
-      const { name, price, quantity } = req.query;
+      const { name, price, quantity, page = 1, limit = 10 } = req.query;
       const where = {};
 
-      if (name) where.name = { [require('sequelize').Op.like]: `%${name}%` };
+      if (name) where.name = { [Op.like]: `%${name}%` };
       if (price) where.price = price;
       if (quantity) where.quantity = quantity;
 
-      const products = await Product.findAll({ where });
-      res.json(products);
+      const pageNumber = parseInt(page, 10);
+      const limitNumber = parseInt(limit, 10);
+      const offset = (pageNumber - 1) * limitNumber;
+
+      const totalItems = await Product.count({ where });
+
+      const products = await Product.findAll({ 
+        where,
+        limit: limitNumber,
+        offset
+      });
+
+      const totalPages = Math.ceil(totalItems / limitNumber);
+
+      res.json({
+        page: pageNumber,
+        limit: limitNumber,
+        totalItems,
+        totalPages,
+        items: products
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
