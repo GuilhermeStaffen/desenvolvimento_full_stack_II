@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const cartController = {
   async addItem(req, res) {
     try {
-      const userId = req.user.id; 
+      const userId = req.user.id;
       const { productId, quantity } = req.body;
 
       if (!productId || !quantity) {
@@ -55,12 +55,83 @@ const cartController = {
       });
 
       res.status(202).json({
-        id: userId,
         userId,
         items: formattedItems,
         total
       });
 
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  },
+
+  async removeItem(req, res) {
+    try {
+      const userId = req.user.id;
+      const { productId } = req.params;
+
+      const cartItem = await Cart.findOne({ where: { userId, productId } });
+
+      if (!cartItem) {
+        return res.status(404).json({ error: 'Item não encontrado no carrinho' });
+      }
+
+      await cartItem.destroy();
+
+      const items = await Cart.findAll({
+        where: { userId },
+        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
+      });
+
+      let total = 0;
+      const formattedItems = items.map(i => {
+        total += i.quantity * i.Product.price;
+        return {
+          productId: i.productId,
+          name: i.Product.name,
+          quantity: i.quantity,
+          unitPrice: i.Product.price
+        };
+      });
+
+      return res.status(200).json({
+        message: 'Item removido do carrinho', userId,
+        items: formattedItems,
+        total
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  },
+
+  async getCart(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const items = await Cart.findAll({
+        where: { userId },
+        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
+      });
+
+      let total = 0;
+      const formattedItems = items.map(i => {
+        const subtotal = i.quantity * i.Product.price;
+        total += subtotal;
+        return {
+          productId: i.productId,
+          name: i.Product.name,
+          quantity: i.quantity,
+          unitPrice: i.Product.price
+        };
+      });
+
+      return res.status(200).json({
+        items: formattedItems,
+        total
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });

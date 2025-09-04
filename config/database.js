@@ -6,8 +6,4 @@ const sequelize = new Sequelize({
   logging: false
 });
 
-sequelize.sync({ alter: true })
-  .then(() => console.log('Banco sincronizado'))
-  .catch(err => console.error('Erro ao sincronizar o banco', err));
-
 module.exports = sequelize;

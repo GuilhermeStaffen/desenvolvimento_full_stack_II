@@ -8,7 +8,11 @@ const userController = {
                 return res.status(400).json({ error: 'Name, email e password são obrigatórios.' });
             }
 
-            const user = await User.create({ name, password, email });
+            const user = await User.create({
+                name,
+                password,
+                email
+            });
 
             const { password: _, ...userWithoutPassword } = user.toJSON();
             res.status(201).json(userWithoutPassword);
@@ -20,7 +24,7 @@ const userController = {
 
     async list(req, res) {
         try {
-            const users = await User.findAll({ attributes: ['id', 'name', 'email', 'userType'] });
+            const users = await User.findAll({ attributes: ['id', 'name', 'email', 'userType', 'createdAt', 'updatedAt'] });
             res.json(users);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -30,7 +34,7 @@ const userController = {
     async getById(req, res) {
         try {
             const { id } = req.params;
-            const user = await User.findByPk(id, { attributes: ['id', 'name', 'email', 'userType'] });
+            const user = await User.findByPk(id, { attributes: ['id', 'name', 'email', 'userType', 'createdAt', 'updatedAt'] });
             if (!user) return res.status(404).json({ error: 'User not found' });
             res.json(user);
         } catch (error) {
@@ -41,7 +45,7 @@ const userController = {
     async update(req, res) {
         try {
             const { id } = req.params;
-            const { name, password, email, userType } = req.body;
+            const { name, password, email } = req.body;
 
             const user = await User.findByPk(id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
@@ -49,11 +53,9 @@ const userController = {
             await user.update({
                 name: name || user.name,
                 password: password || user.password,
-                email: email || user.email,
-                userType: user.userType
+                email: email || user.email
             });
 
-            
             const { password: _, ...userWithoutPassword } = user.toJSON();
 
             res.json(userWithoutPassword);
