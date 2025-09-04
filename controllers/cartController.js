@@ -85,6 +85,37 @@ const cartController = {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
     }
+  },
+
+  async getCart(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const items = await Cart.findAll({
+        where: { userId },
+        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
+      });
+
+      let total = 0;
+      const formattedItems = items.map(i => {
+        const subtotal = i.quantity * i.Product.price;
+        total += subtotal;
+        return {
+          productId: i.productId,
+          name: i.Product.name,
+          quantity: i.quantity,
+          unitPrice: i.Product.price
+        };
+      });
+
+      return res.status(200).json({
+        items: formattedItems,
+        total
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
   }
 };
 
