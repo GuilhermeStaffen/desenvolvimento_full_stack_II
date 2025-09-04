@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const cartController = {
   async addItem(req, res) {
     try {
-      const userId = req.user.id; 
+      const userId = req.user.id;
       const { productId, quantity } = req.body;
 
       if (!productId || !quantity) {
@@ -79,7 +79,28 @@ const cartController = {
 
       await cartItem.destroy();
 
-      return res.status(200).json({ message: 'Item removido do carrinho' });
+      const items = await Cart.findAll({
+        where: { userId },
+        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
+      });
+
+      let total = 0;
+      const formattedItems = items.map(i => {
+        total += i.quantity * i.Product.price;
+        return {
+          productId: i.productId,
+          name: i.Product.name,
+          quantity: i.quantity,
+          unitPrice: i.Product.price
+        };
+      });
+
+      return res.status(200).json({
+        message: 'Item removido do carrinho', userId,
+        items: formattedItems,
+        total
+      });
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
