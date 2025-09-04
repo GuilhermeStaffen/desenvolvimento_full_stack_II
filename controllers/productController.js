@@ -63,10 +63,6 @@ const productController = {
 
       const totalItems = await Product.count({ where });
 
-      if (totalItems === 0) {
-        return res.status(404).json({ error: 'Não foram localizados produtos para o filtro enviado' });
-      }
-
       const products = await Product.findAll({ 
         where,
         limit: limitNumber,
