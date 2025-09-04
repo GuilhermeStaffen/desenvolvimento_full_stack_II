@@ -3,12 +3,12 @@ const { User } = require('../models');
 const userController = {
     async create(req, res) {
         try {
-            const { name, password, email, userType } = req.body;
+            const { name, password, email } = req.body;
             if (!name || !password || !email) {
                 return res.status(400).json({ error: 'Name, email e password são obrigatórios.' });
             }
 
-            const user = await User.create({ name, password, email, userType });
+            const user = await User.create({ name, password, email });
 
             const { password: _, ...userWithoutPassword } = user.toJSON();
             res.status(201).json(userWithoutPassword);
@@ -50,7 +50,7 @@ const userController = {
                 name: name || user.name,
                 password: password || user.password,
                 email: email || user.email,
-                userType: userType || user.userType
+                userType: user.userType
             });
 
             
