@@ -45,7 +45,7 @@ const userController = {
     async update(req, res) {
         try {
             const { id } = req.params;
-            const { name, password, email, userType } = req.body;
+            const { name, password, email } = req.body;
 
             const user = await User.findByPk(id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
