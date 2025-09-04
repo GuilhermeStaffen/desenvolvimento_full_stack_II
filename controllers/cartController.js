@@ -55,7 +55,6 @@ const cartController = {
       });
 
       res.status(202).json({
-        id: userId,
         userId,
         items: formattedItems,
         total
@@ -70,9 +69,9 @@ const cartController = {
   async removeItem(req, res) {
     try {
       const userId = req.user.id;
-      const { id } = req.params;
+      const { productId } = req.params;
 
-      const cartItem = await Cart.findOne({ where: { userId, id } });
+      const cartItem = await Cart.findOne({ where: { userId, productId } });
 
       if (!cartItem) {
         return res.status(404).json({ error: 'Item não encontrado no carrinho' });

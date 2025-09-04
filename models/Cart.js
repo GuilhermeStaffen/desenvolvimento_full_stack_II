@@ -28,7 +28,7 @@ const Cart = sequelize.define('Cart', {
     }
 }, {
     tableName: 'cart',
-    timestamps: false
+    timestamps: true
 });
 
 User.hasMany(Cart, { foreignKey: 'userId' });
