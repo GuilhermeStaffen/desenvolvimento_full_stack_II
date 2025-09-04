@@ -65,6 +65,26 @@ const cartController = {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
     }
+  },
+
+  async removeItem(req, res) {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+
+      const cartItem = await Cart.findOne({ where: { userId, id } });
+
+      if (!cartItem) {
+        return res.status(404).json({ error: 'Item não encontrado no carrinho' });
+      }
+
+      await cartItem.destroy();
+
+      return res.status(200).json({ message: 'Item removido do carrinho' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
   }
 };
 
