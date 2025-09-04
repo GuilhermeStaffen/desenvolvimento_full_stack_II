@@ -4,6 +4,7 @@ const sequelize = require('../config/database');
 const Product = sequelize.define('Product', {
   name: {
     type: DataTypes.STRING,
+    unique: true,
     allowNull: false
   },
   price: {
