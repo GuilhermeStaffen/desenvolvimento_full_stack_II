@@ -34,6 +34,10 @@ const userController = {
     async getById(req, res) {
         try {
             const { id } = req.params;
+
+            if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
+                return res.status(403).json({ error: 'Acesso negado.' });
+            }
             const user = await User.findByPk(id, { attributes: ['id', 'name', 'email', 'userType', 'createdAt', 'updatedAt'] });
             if (!user) return res.status(404).json({ error: 'User not found' });
             res.json(user);
@@ -46,6 +50,10 @@ const userController = {
         try {
             const { id } = req.params;
             const { name, password, email } = req.body;
+
+            if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
+                return res.status(403).json({ error: 'Acesso negado.' });
+            }
 
             const user = await User.findByPk(id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
