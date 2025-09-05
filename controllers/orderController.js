@@ -1,11 +1,12 @@
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
+const Cart = require('../models/Cart');
 
 module.exports = {
   async create(req, res) {
     try {
-      const userId = req.user.id; 
+      const userId = req.user.id;
       const { items } = req.body;
 
       if (!items || items.length === 0) {
@@ -42,9 +43,12 @@ module.exports = {
       }
 
       const order = await Order.create({ userId, status: 'placed', total });
+
       for (const oi of orderItems) {
         await OrderItem.create({ ...oi, orderId: order.id });
       }
+
+      await Cart.destroy({ where: { userId } });
 
       const response = {
         id: order.id,
@@ -66,4 +70,4 @@ module.exports = {
       res.status(500).json({ error: 'Erro interno' });
     }
   }
-};
+}
