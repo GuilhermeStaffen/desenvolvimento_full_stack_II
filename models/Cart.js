@@ -32,9 +32,17 @@ const Cart = sequelize.define('Cart', {
 });
 
 User.hasMany(Cart, { foreignKey: 'userId' });
-Cart.belongsTo(User, { foreignKey: 'userId' });
+Cart.belongsTo(User, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
 
 Product.hasMany(Cart, { foreignKey: 'productId' });
-Cart.belongsTo(Product, { foreignKey: 'productId' });
+Cart.belongsTo(Product, {
+    foreignKey: 'productId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
 
 module.exports = Cart;
