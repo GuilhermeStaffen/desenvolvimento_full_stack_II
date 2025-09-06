@@ -4,6 +4,7 @@ const Product = require('./Product');
 const Cart = require('./Cart');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
+const ProductImage = require('./ProductImage');
 
 
 async function syncDatabase() {
@@ -15,4 +16,4 @@ async function syncDatabase() {
   }
 }
 
-module.exports = { sequelize, User, Product, Cart, Order, OrderItem, syncDatabase };
+module.exports = { sequelize, User, Product, Cart, Order, OrderItem, ProductImage, syncDatabase };
