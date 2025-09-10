@@ -46,9 +46,8 @@ const productController = {
         updatedBy: req.user.id
       });
 
-      if (Array.isArray(images)) {
-        await ProductImage.destroy({ where: { productId: product.id } });
-        const imageRecords = images.map(url => ({ url, productId: product.id }));
+      if (Array.isArray(images) && images.length > 0) {
+        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
         await ProductImage.bulkCreate(imageRecords);
       }
 
