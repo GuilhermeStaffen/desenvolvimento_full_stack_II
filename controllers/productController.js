@@ -1,4 +1,4 @@
-const { Product } = require('../models');
+const { Product, ProductImage } = require('../models');
 const { Op } = require('sequelize');
 
 const productController = {
@@ -11,7 +11,7 @@ const productController = {
       }
 
       const product = await Product.create({ name, price, quantity, createdBy: req.user.id, updatedBy: req.user.id });
-      
+
       if (Array.isArray(images) && images.length > 0) {
         const imageRecords = images.map(url => ({ url, productId: product.id }));
         await ProductImage.bulkCreate(imageRecords);
@@ -20,7 +20,7 @@ const productController = {
       const productWithImages = await Product.findByPk(product.id, {
         include: { model: ProductImage, as: 'images', attributes: ['url'] }
       });
-      
+
       res.status(201).json(productWithImages);
 
     } catch (error) {
@@ -103,7 +103,7 @@ const productController = {
 
       const totalPages = Math.ceil(totalItems / limitNumber);
 
-      res.json({
+      res.status(200).json({
         page: pageNumber,
         limit: limitNumber,
         totalItems,
@@ -122,7 +122,7 @@ const productController = {
         include: { model: ProductImage, as: 'images', attributes: ['url'] }
       });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-      res.json(product);
+      res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
