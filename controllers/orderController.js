@@ -69,5 +69,67 @@ module.exports = {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
     }
+  },
+
+  async myOrders(req, res) {
+    try {
+      const userId = req.user.id;
+      const { page = 1, limit = 10 } = req.query;
+
+      const pageNumber = parseInt(page, 10) || 1;
+      const limitNumber = parseInt(limit, 10) || 10;
+      const offset = (pageNumber - 1) * limitNumber;
+
+      const totalItems = await Order.count({ where: { userId } });
+
+      if (totalItems === 0) {
+        return res.status(404).json({ error: 'Nenhum pedido encontrado.' });
+      }
+
+      const orders = await Order.findAll({
+        where: { userId },
+        include: [
+          {
+            model: OrderItem,
+            include: [
+              {
+                model: Product,
+                attributes: ['id', 'name']
+              }
+            ]
+          }
+        ],
+        limit: limitNumber,
+        offset,
+        order: [['createdAt', 'DESC']]
+      });
+
+      const totalPages = Math.ceil(totalItems / limitNumber);
+
+      const formattedOrders = orders.map(order => ({
+        id: order.id,
+        status: order.status,
+        total: order.total,
+        createdAt: order.createdAt,
+        products: order.OrderItems.map(oi => ({
+          productId: oi.productId,
+          name: oi.Product?.name,
+          quantity: oi.quantity,
+          unitPrice: oi.unitPrice,
+          subtotal: oi.subtotal
+        }))
+      }));
+
+      res.json({
+        page: pageNumber,
+        limit: limitNumber,
+        totalItems,
+        totalPages,
+        items: formattedOrders
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
   }
 }
