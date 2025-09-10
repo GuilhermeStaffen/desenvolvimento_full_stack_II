@@ -1,8 +1,12 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const { syncDatabase } = require('./models');
 
+// habilita CORS para qualquer origem
+app.use(cors());
+app.use(express.json());
 
 const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
