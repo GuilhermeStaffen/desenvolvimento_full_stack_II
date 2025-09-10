@@ -13,7 +13,7 @@ const productController = {
       const product = await Product.create({ name, price, quantity, createdBy: req.user.id, updatedBy: req.user.id });
 
       if (Array.isArray(images) && images.length > 0) {
-        const imageRecords = images.map(url => ({ url, productId: product.id }));
+        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
         await ProductImage.bulkCreate(imageRecords);
       }
 
@@ -25,7 +25,7 @@ const productController = {
 
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
-        return res.status(400).json({ error: 'Já existe um produto com esse nome.' });
+        return res.status(400).json({ error: 'Erro ao cadastrar produto.' });
       }
       res.status(500).json({ error: error.message });
     }
