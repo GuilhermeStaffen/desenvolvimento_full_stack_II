@@ -16,6 +16,9 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
  *         productId:
  *           type: integer
  *           example: 1
+ *         name:
+ *           type: string
+ *           example: "Produto Exemplo"
  *         quantity:
  *           type: integer
  *           example: 2
@@ -25,6 +28,14 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
  *         subtotal:
  *           type: number
  *           example: 100.0
+ *         images:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
  *
  *     Order:
  *       type: object
@@ -112,25 +123,25 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
  *                     quantity:
  *                       type: integer
  *                       example: 2
- *     responses:
- *       201:
- *         description: "Pedido criado com sucesso"
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Order'
- *       400:
- *         description: "Erro de validação (ex.: itens inválidos ou estoque insuficiente)"
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: "Erro interno"
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *   responses:
+ *     201:
+ *       description: "Pedido criado com sucesso"
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Order'
+ *     400:
+ *       description: "Erro de validação (ex.: itens inválidos ou estoque insuficiente)"
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
+ *     500:
+ *       description: "Erro interno"
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ErrorResponse'
  *
  *   get:
  *     summary: "Lista todos os pedidos (admin)"

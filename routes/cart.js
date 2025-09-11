@@ -28,6 +28,14 @@ const cartController = require('../controllers/cartController');
  *         subtotal:
  *           type: number
  *           example: 100.0
+ *         images:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 example: "https://example.com/image.jpg"
  *
  *     Cart:
  *       type: object
@@ -65,7 +73,7 @@ const cartController = require('../controllers/cartController');
  * @swagger
  * /cart:
  *   post:
- *     summary: Adiciona um item ao carrinho (requer login)
+ *     summary: "Adiciona um item ao carrinho (requer login)"
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
@@ -87,44 +95,44 @@ const cartController = require('../controllers/cartController');
  *                 example: 2
  *     responses:
  *       200:
- *         description: Carrinho atualizado (item adicionado)
+ *         description: "Carrinho atualizado (item adicionado)"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Cart'
  *       400:
- *         description: Erro de validação (produto sem estoque ou campos obrigatórios)
+ *         description: "Erro de validação (produto sem estoque ou campos obrigatórios)"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
- *         description: Produto não encontrado
+ *         description: "Produto não encontrado"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
- *         description: Erro interno
+ *         description: "Erro interno"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *
  *   get:
- *     summary: Retorna o carrinho do usuário autenticado (requer login)
+ *     summary: "Retorna o carrinho do usuário autenticado (requer login)"
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Carrinho do usuário
+ *         description: "Carrinho do usuário"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Cart'
  *       500:
- *         description: Erro interno
+ *         description: "Erro interno"
  *         content:
  *           application/json:
  *             schema:
@@ -132,7 +140,7 @@ const cartController = require('../controllers/cartController');
  *
  * /cart/{productId}:
  *   put:
- *     summary: Atualiza a quantidade de um item no carrinho (idempotente) (requer login)
+ *     summary: "Atualiza a quantidade de um item no carrinho (idempotente) (requer login)"
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
@@ -142,7 +150,7 @@ const cartController = require('../controllers/cartController');
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do produto a ser atualizado
+ *         description: "ID do produto a ser atualizado"
  *     requestBody:
  *       required: true
  *       content:
@@ -151,7 +159,7 @@ const cartController = require('../controllers/cartController');
  *             $ref: '#/components/schemas/UpdateQuantityRequest'
  *     responses:
  *       200:
- *         description: Carrinho atualizado (quantidade ajustada). Se quantity = 0, item é removido.
+ *         description: "Carrinho atualizado (quantidade ajustada). Se quantity = 0, item é removido."
  *         content:
  *           application/json:
  *             schema:
@@ -163,20 +171,20 @@ const cartController = require('../controllers/cartController');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
- *         description: Produto não encontrado
+ *         description: "Produto não encontrado"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
- *         description: Erro interno
+ *         description: "Erro interno"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *
  *   delete:
- *     summary: Remove um item do carrinho (requer login)
+ *     summary: "Remove um item do carrinho (requer login)"
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
@@ -186,22 +194,22 @@ const cartController = require('../controllers/cartController');
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do produto a ser removido
+ *         description: "ID do produto a ser removido"
  *     responses:
  *       200:
- *         description: Item removido do carrinho — retorna o carrinho atualizado
+ *         description: "Item removido do carrinho — retorna o carrinho atualizado"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Cart'
  *       404:
- *         description: Item não encontrado no carrinho
+ *         description: "Item não encontrado no carrinho"
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
- *         description: Erro interno
+ *         description: "Erro interno"
  *         content:
  *           application/json:
  *             schema:

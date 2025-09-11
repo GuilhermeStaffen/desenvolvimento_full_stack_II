@@ -3,6 +3,7 @@ const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const User = require('../models/User');
+const ProductImage = require('../models/ProductImage');
 
 module.exports = {
   async create(req, res) {
@@ -105,7 +106,14 @@ module.exports = {
             include: [
               {
                 model: Product,
-                attributes: ['id', 'name']
+                attributes: ['id', 'name'],
+                include: [
+                  {
+                    model: ProductImage,
+                    as: 'images',
+                    attributes: ['url']
+                  }
+                ]
               }
             ]
           }
@@ -128,7 +136,10 @@ module.exports = {
           name: oi.Product?.name,
           quantity: oi.quantity,
           unitPrice: oi.unitPrice,
-          subtotal: oi.subtotal
+          subtotal: oi.subtotal,
+          images: oi.Product?.images?.map(img => ({
+            url: img.url
+          })) || []
         }))
       }));
 
@@ -175,7 +186,14 @@ module.exports = {
             include: [
               {
                 model: Product,
-                attributes: ['id', 'name']
+                attributes: ['id', 'name'],
+                include: [
+                  {
+                    model: ProductImage,
+                    as: 'images',
+                    attributes: ['url']
+                  }
+                ]
               }
             ]
           }
@@ -199,7 +217,10 @@ module.exports = {
           name: oi.Product?.name,
           quantity: oi.quantity,
           unitPrice: oi.unitPrice,
-          subtotal: oi.subtotal
+          subtotal: oi.subtotal,
+          images: oi.Product?.images?.map(img => ({
+            url: img.url
+          })) || []
         }))
       }));
 
@@ -213,7 +234,7 @@ module.exports = {
 
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Erro interno: '+error });
+      res.status(500).json({ error: 'Erro interno: ' + error });
     }
   }
 };

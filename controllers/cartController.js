@@ -1,5 +1,6 @@
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const ProductImage = require('../models/ProductImage');
 
 const cartController = {
   async addItem(req, res) {
@@ -94,7 +95,19 @@ const cartController = {
 
       const items = await Cart.findAll({
         where: { userId },
-        include: [{ model: Product, attributes: ['name', 'price'] }]
+        include: [
+          {
+            model: Product,
+            attributes: ['id', 'name', 'price'],
+            include: [
+              {
+                model: ProductImage,
+                as: 'images',
+                attributes: ['url']
+              }
+            ]
+          }
+        ]
       });
 
       let total = 0;
@@ -106,7 +119,10 @@ const cartController = {
           name: i.Product.name,
           quantity: i.quantity,
           unitPrice: i.Product.price,
-          subtotal
+          subtotal,
+          images: i.Product.images?.map(img => ({
+            url: img.url
+          })) || []
         };
       });
 
