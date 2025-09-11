@@ -10,11 +10,25 @@ const productController = {
         return res.status(400).json({ error: 'Name, price, description e quantity são obrigatórios.' });
       }
 
-      const product = await Product.create({ name, price, description, quantity, createdBy: req.user.id, updatedBy: req.user.id });
+      const product = await Product.create({
+        name,
+        price,
+        description,
+        quantity,
+        createdBy: req.user.id,
+        updatedBy: req.user.id
+      });
 
       if (Array.isArray(images) && images.length > 0) {
-        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
-        await ProductImage.bulkCreate(imageRecords);
+        for (const img of images) {
+          const exists = await ProductImage.findOne({
+            where: { url: img.url, productId: product.id }
+          });
+
+          if (!exists) {
+            await ProductImage.create({ url: img.url, productId: product.id });
+          }
+        }
       }
 
       const productWithImages = await Product.findByPk(product.id, {
@@ -43,13 +57,20 @@ const productController = {
         name: name || product.name,
         price: price !== undefined ? price : product.price,
         quantity: quantity !== undefined ? quantity : product.quantity,
-        description: description || product.description,  
+        description: description || product.description,
         updatedBy: req.user.id
       });
 
       if (Array.isArray(images) && images.length > 0) {
-        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
-        await ProductImage.bulkCreate(imageRecords);
+        for (const img of images) {
+          const exists = await ProductImage.findOne({
+            where: { url: img.url, productId: product.id }
+          });
+
+          if (!exists) {
+            await ProductImage.create({ url: img.url, productId: product.id });
+          }
+        }
       }
 
       const productWithImages = await Product.findByPk(product.id, {
