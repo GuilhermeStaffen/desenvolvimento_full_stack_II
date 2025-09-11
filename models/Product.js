@@ -7,6 +7,11 @@ const Product = sequelize.define('Product', {
     unique: true,
     allowNull: false
   },
+  description: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+    allowNull: false
+  },
   price: {
     type: DataTypes.FLOAT,
     allowNull: false
@@ -27,15 +32,15 @@ const Product = sequelize.define('Product', {
   tableName: 'products',
   timestamps: true,
   hooks: {
-    async beforeCreate(user, options) {
+    async beforeCreate(product, options) {
       if (options.userId) {
-        user.createdBy = options.userId;
-        user.updatedBy = options.userId;
+        product.createdBy = options.userId;
+        product.updatedBy = options.userId;
       }
     },
-    async beforeUpdate(user, options) {
+    async beforeUpdate(product, options) {
       if (options.userId) {
-        user.updatedBy = options.userId;
+        product.updatedBy = options.userId;
       }
     }
   }

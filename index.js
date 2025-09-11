@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const swaggerDocs = require("./config/swagger");
 const { syncDatabase } = require('./models');
 
 // habilita CORS para qualquer origem
@@ -22,6 +23,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
 
 syncDatabase(); 
+swaggerDocs(app);
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
