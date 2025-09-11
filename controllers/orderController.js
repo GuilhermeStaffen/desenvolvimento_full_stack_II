@@ -120,7 +120,7 @@ module.exports = {
         }))
       }));
 
-      res.json({
+      res.status(200).json({
         page: pageNumber,
         limit: limitNumber,
         totalItems,

@@ -1,31 +1,31 @@
-const { Product } = require('../models');
+const { Product, ProductImage } = require('../models');
 const { Op } = require('sequelize');
 
 const productController = {
   async create(req, res) {
     try {
-      const { name, price, quantity, images } = req.body;
+      const { name, price, description, quantity, images } = req.body;
 
-      if (!name || price === undefined || quantity === undefined) {
-        return res.status(400).json({ error: 'Name, price e quantity são obrigatórios.' });
+      if (!name || !description || price === undefined || quantity === undefined) {
+        return res.status(400).json({ error: 'Name, price, description e quantity são obrigatórios.' });
       }
 
-      const product = await Product.create({ name, price, quantity, createdBy: req.user.id, updatedBy: req.user.id });
-      
+      const product = await Product.create({ name, price, description, quantity, createdBy: req.user.id, updatedBy: req.user.id });
+
       if (Array.isArray(images) && images.length > 0) {
-        const imageRecords = images.map(url => ({ url, productId: product.id }));
+        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
         await ProductImage.bulkCreate(imageRecords);
       }
 
       const productWithImages = await Product.findByPk(product.id, {
         include: { model: ProductImage, as: 'images', attributes: ['url'] }
       });
-      
+
       res.status(201).json(productWithImages);
 
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
-        return res.status(400).json({ error: 'Já existe um produto com esse nome.' });
+        return res.status(400).json({ error: 'Erro ao cadastrar produto.' });
       }
       res.status(500).json({ error: error.message });
     }
@@ -34,7 +34,7 @@ const productController = {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { name, price, quantity, images } = req.body;
+      const { name, price, description, quantity, images } = req.body;
 
       const product = await Product.findByPk(id);
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
@@ -43,12 +43,12 @@ const productController = {
         name: name || product.name,
         price: price !== undefined ? price : product.price,
         quantity: quantity !== undefined ? quantity : product.quantity,
+        description: description || product.description,  
         updatedBy: req.user.id
       });
 
-      if (Array.isArray(images)) {
-        await ProductImage.destroy({ where: { productId: product.id } });
-        const imageRecords = images.map(url => ({ url, productId: product.id }));
+      if (Array.isArray(images) && images.length > 0) {
+        const imageRecords = images.map(img => ({ url: img.url, productId: product.id }));
         await ProductImage.bulkCreate(imageRecords);
       }
 
@@ -103,7 +103,7 @@ const productController = {
 
       const totalPages = Math.ceil(totalItems / limitNumber);
 
-      res.json({
+      res.status(200).json({
         page: pageNumber,
         limit: limitNumber,
         totalItems,
@@ -122,7 +122,7 @@ const productController = {
         include: { model: ProductImage, as: 'images', attributes: ['url'] }
       });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-      res.json(product);
+      res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
