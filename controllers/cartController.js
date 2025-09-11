@@ -1,5 +1,6 @@
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const ProductImage = require('../models/ProductImage');
 
 const cartController = {
   async addItem(req, res) {
@@ -12,54 +13,59 @@ const cartController = {
       }
 
       const product = await Product.findByPk(productId);
-      if (!product) {
-        return res.status(404).json({ error: 'Produto não encontrado' });
-      }
+      if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
 
       if (product.quantity < quantity) {
-        return res.status(400).json({ error: 'Item não possui estoque' });
+        return res.status(400).json({ error: 'Item não possui estoque suficiente' });
       }
 
       let cartItem = await Cart.findOne({ where: { userId, productId } });
-
       if (cartItem) {
         const newQuantity = cartItem.quantity + quantity;
-
         if (product.quantity < newQuantity) {
-          return res.status(400).json({ error: 'Item não possui estoque suficiente' });
+          return res.status(400).json({ error: 'Estoque insuficiente' });
         }
-
         await cartItem.update({ quantity: newQuantity });
       } else {
-        cartItem = await Cart.create({
-          userId,
-          productId,
-          quantity
-        });
+        cartItem = await Cart.create({ userId, productId, quantity });
       }
 
-      const items = await Cart.findAll({
-        where: { userId },
-        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
-      });
+      return cartController.getCart(req, res);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  },
 
-      let total = 0;
-      const formattedItems = items.map(i => {
-        total += i.quantity * i.Product.price;
-        return {
-          productId: i.productId,
-          name: i.Product.name,
-          quantity: i.quantity,
-          unitPrice: i.Product.price
-        };
-      });
+  async updateItem(req, res) {
+    try {
+      const userId = req.user.id;
+      const { productId } = req.params;
+      const { quantity } = req.body;
 
-      res.status(202).json({
-        userId,
-        items: formattedItems,
-        total
-      });
+      if (quantity === undefined) {
+        return res.status(400).json({ error: 'quantity é obrigatório' });
+      }
 
+      const product = await Product.findByPk(productId);
+      if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+
+      const cartItem = await Cart.findOne({ where: { userId, productId } });
+
+      if (quantity <= 0) {
+        if (cartItem) await cartItem.destroy();
+      } else {
+        if (product.quantity < quantity) {
+          return res.status(400).json({ error: 'Estoque insuficiente' });
+        }
+        if (cartItem) {
+          await cartItem.update({ quantity });
+        } else {
+          await Cart.create({ userId, productId, quantity });
+        }
+      }
+
+      return cartController.getCart(req, res);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
@@ -72,35 +78,11 @@ const cartController = {
       const { productId } = req.params;
 
       const cartItem = await Cart.findOne({ where: { userId, productId } });
-
-      if (!cartItem) {
-        return res.status(404).json({ error: 'Item não encontrado no carrinho' });
-      }
+      if (!cartItem) return res.status(404).json({ error: 'Item não encontrado no carrinho' });
 
       await cartItem.destroy();
 
-      const items = await Cart.findAll({
-        where: { userId },
-        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
-      });
-
-      let total = 0;
-      const formattedItems = items.map(i => {
-        total += i.quantity * i.Product.price;
-        return {
-          productId: i.productId,
-          name: i.Product.name,
-          quantity: i.quantity,
-          unitPrice: i.Product.price
-        };
-      });
-
-      return res.status(200).json({
-        message: 'Item removido do carrinho', userId,
-        items: formattedItems,
-        total
-      });
-
+      return cartController.getCart(req, res);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
@@ -113,7 +95,19 @@ const cartController = {
 
       const items = await Cart.findAll({
         where: { userId },
-        include: [{ model: Product, attributes: ['name', 'price', 'quantity'] }]
+        include: [
+          {
+            model: Product,
+            attributes: ['id', 'name', 'price'],
+            include: [
+              {
+                model: ProductImage,
+                as: 'images',
+                attributes: ['url']
+              }
+            ]
+          }
+        ]
       });
 
       let total = 0;
@@ -124,14 +118,15 @@ const cartController = {
           productId: i.productId,
           name: i.Product.name,
           quantity: i.quantity,
-          unitPrice: i.Product.price
+          unitPrice: i.Product.price,
+          subtotal,
+          images: i.Product.images?.map(img => ({
+            url: img.url
+          })) || []
         };
       });
 
-      return res.status(200).json({
-        items: formattedItems,
-        total
-      });
+      return res.status(200).json({ userId, items: formattedItems, total });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
