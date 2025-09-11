@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const authMiddleware = require('../middlewares/authMiddleware');
-
 /**
  * @swagger
  * components:
@@ -42,6 +41,9 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *         total:
  *           type: number
  *           example: 200.5
+ *         fullAddress:
+ *           type: string
+ *           example: "Rua A, 123, São Paulo, SP, 01000-000, Brasil"
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -55,7 +57,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
  * @swagger
  * /orders:
  *   post:
- *     summary: Cria um novo pedido  (requer login)
+ *     summary: Cria um novo pedido (requer login)
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
