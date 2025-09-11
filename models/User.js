@@ -23,6 +23,40 @@ const User = sequelize.define('User', {
         type: DataTypes.ENUM('customer', 'admin'),
         allowNull: false,
         defaultValue: 'customer'
+    },
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    street: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
+    },
+    number: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
+    },
+    city: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
+    },
+    state: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
+    },
+    zipcode: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
+    },
+    country: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ''
     }
 }, {
     tableName: 'users',
