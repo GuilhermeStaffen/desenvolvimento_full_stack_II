@@ -3,19 +3,89 @@ const { User } = require('../models');
 const userController = {
     async create(req, res) {
         try {
-            const { name, password, email } = req.body;
-            if (!name || !password || !email) {
-                return res.status(400).json({ error: 'Name, email e password são obrigatórios.' });
+            const { name, email, password, phone, address } = req.body;
+            if (!name || !email || !password || address === undefined || !address.street || !address.number || !address.city || !address.state || !address.zipcode || !address.country) {
+                return res.status(400).json({ error: 'Name, email, endereço e password são obrigatórios.' });
             }
 
             const user = await User.create({
                 name,
+                email,
                 password,
-                email
+                phone,
+                street: address?.street || '',
+                number: address?.number || '',
+                city: address?.city || '',
+                state: address?.state || '',
+                zipcode: address?.zipcode || '',
+                country: address?.country || ''
             });
 
-            const { password: _, ...userWithoutPassword } = user.toJSON();
-            res.status(201).json(userWithoutPassword);
+            const { password: _, ...userData } = user.toJSON();
+            userData.address = {
+                street: userData.street,
+                number: userData.number,
+                city: userData.city,
+                state: userData.state,
+                zipcode: userData.zipcode,
+                country: userData.country
+            };
+            delete userData.street;
+            delete userData.number;
+            delete userData.city;
+            delete userData.state;
+            delete userData.zipcode;
+            delete userData.country;
+
+            res.status(201).json(userData);
+
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+
+    async update(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, email, password, phone, address } = req.body;
+
+            if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
+                return res.status(403).json({ error: 'Acesso negado.' });
+            }
+
+            const user = await User.findByPk(id);
+            if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+
+            await user.update({
+                name: name || user.name,
+                email: email || user.email,
+                password: password || user.password,
+                phone: phone || user.phone,
+                street: address?.street || user.street,
+                number: address?.number || user.number,
+                city: address?.city || user.city,
+                state: address?.state || user.state,
+                zipcode: address?.zipcode || user.zipcode,
+                country: address?.country || user.country
+            });
+
+            const { password: _, ...userData } = user.toJSON();
+            userData.address = {
+                street: userData.street,
+                number: userData.number,
+                city: userData.city,
+                state: userData.state,
+                zipcode: userData.zipcode,
+                country: userData.country
+            };
+            delete userData.street;
+            delete userData.number;
+            delete userData.city;
+            delete userData.state;
+            delete userData.zipcode;
+            delete userData.country;
+
+            res.json(userData);
 
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -24,8 +94,19 @@ const userController = {
 
     async list(req, res) {
         try {
-            const users = await User.findAll({ attributes: ['id', 'name', 'email', 'userType', 'createdAt', 'updatedAt'] });
-            res.json(users);
+            const users = await User.findAll({
+                attributes: ['id', 'name', 'email', 'userType', 'phone', 'street', 'number', 'city', 'state', 'zipcode', 'country', 'createdAt', 'updatedAt']
+            });
+
+            const formattedUsers = users.map(u => {
+                const { street, number, city, state, zipcode, country, ...rest } = u.toJSON();
+                return {
+                    ...rest,
+                    address: { street, number, city, state, zipcode, country }
+                };
+            });
+
+            res.json(formattedUsers);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -38,36 +119,20 @@ const userController = {
             if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
                 return res.status(403).json({ error: 'Acesso negado.' });
             }
-            const user = await User.findByPk(id, { attributes: ['id', 'name', 'email', 'userType', 'createdAt', 'updatedAt'] });
-            if (!user) return res.status(404).json({ error: 'User not found' });
-            res.json(user);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
 
-    async update(req, res) {
-        try {
-            const { id } = req.params;
-            const { name, password, email } = req.body;
-
-            if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
-                return res.status(403).json({ error: 'Acesso negado.' });
-            }
-
-            const user = await User.findByPk(id);
-            if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-
-            await user.update({
-                name: name || user.name,
-                password: password || user.password,
-                email: email || user.email
+            const user = await User.findByPk(id, {
+                attributes: ['id', 'name', 'email', 'userType', 'phone', 'street', 'number', 'city', 'state', 'zipcode', 'country', 'createdAt', 'updatedAt']
             });
 
-            const { password: _, ...userWithoutPassword } = user.toJSON();
+            if (!user) return res.status(404).json({ error: 'User not found' });
 
-            res.json(userWithoutPassword);
+            const { street, number, city, state, zipcode, country, ...rest } = user.toJSON();
+            const userData = {
+                ...rest,
+                address: { street, number, city, state, zipcode, country }
+            };
 
+            res.json(userData);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

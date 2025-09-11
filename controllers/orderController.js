@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
+const User = require('../models/User');
 
 module.exports = {
   async create(req, res) {
@@ -12,6 +13,14 @@ module.exports = {
       if (!items || items.length === 0) {
         return res.status(400).json({ error: 'Nenhum item informado.' });
       }
+
+      // Buscar dados do usuário para o endereço
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(400).json({ error: 'Usuário não encontrado.' });
+      }
+
+      const fullAddress = `${user.street}, ${user.number}, ${user.city}, ${user.state}, ${user.zipcode}, ${user.country}`;
 
       let total = 0;
       const orderItems = [];
@@ -42,7 +51,7 @@ module.exports = {
         await product.update({ quantity: product.quantity - item.quantity });
       }
 
-      const order = await Order.create({ userId, status: 'placed', total });
+      const order = await Order.create({ userId, status: 'placed', total, fullAddress });
 
       for (const oi of orderItems) {
         await OrderItem.create({ ...oi, orderId: order.id });
@@ -55,6 +64,7 @@ module.exports = {
         userId,
         status: order.status,
         total: order.total,
+        fullAddress: order.fullAddress,
         createdAt: order.createdAt,
         products: orderItems.map(i => ({
           productId: i.productId,
@@ -65,6 +75,7 @@ module.exports = {
       };
 
       res.status(201).json(response);
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno' });
@@ -110,6 +121,7 @@ module.exports = {
         id: order.id,
         status: order.status,
         total: order.total,
+        fullAddress: order.fullAddress,
         createdAt: order.createdAt,
         products: order.OrderItems.map(oi => ({
           productId: oi.productId,
@@ -132,4 +144,4 @@ module.exports = {
       res.status(500).json({ error: 'Erro interno' });
     }
   }
-}
+};

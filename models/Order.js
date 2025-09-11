@@ -13,6 +13,10 @@ const Order = sequelize.define('Order', {
         defaultValue: 'placed',
         allowNull: false
     },
+    fullAddress: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     total: {
         type: DataTypes.FLOAT,
         allowNull: false
