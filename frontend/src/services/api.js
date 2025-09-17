@@ -35,8 +35,9 @@ export function listUsers() { return client.get("/users"); }
 export function updateUser(id, body) { return client.put(`/users/${id}`, body); }
 
 // PRODUCTS
-export async function listProdutos(params = {}) {
-  const res = await client.get("/products", { params });
+export async function listProdutos(params) {
+  const parametros = params['q'];
+  const res = await client.get("/products?name="+parametros);
   const payload = res.data ?? {};
   const rawItems = Array.isArray(payload) ? payload : (payload.items ?? payload.rows ?? payload.data ?? []);
   const items = rawItems.map(normalizeProduct);

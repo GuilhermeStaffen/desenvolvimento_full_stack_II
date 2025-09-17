@@ -12,21 +12,40 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const { addToCart } = useCart();
 
-  async function load(p = 1, query = "") {
-    setLoading(true);
-    try {
-      const res = await api.listProdutos({ page: p, limit: 9, q: query });
-      setProdutos(res.items);
-      setPage(res.page);
-      setTotalPages(res.totalPages);
-    } catch (err) {
-      console.error(err);
-      setProdutos([]);
-    } finally {
-      setLoading(false);
-    }
+  // async function load(p = 1, query = "") {
+  //   setLoading(true);
+  //   try {
+  //     const res = await api.listProdutos({ page: p, limit: 9, q: query });
+  //     setProdutos(res.items);
+  //     setPage(res.page);
+  //     setTotalPages(res.totalPages);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setProdutos([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+async function load(p = 1, query = "") {
+  setLoading(true);
+  console.log(query);
+  try {
+    const { items, page, totalPages } = await api.listProdutos({
+      page: p,
+      limit: 9,
+      q: query
+    });
+    // console.log(items, page, totalPages);
+    setProdutos(items);
+    setPage(page);
+    setTotalPages(totalPages);
+  } catch (err) {
+    console.error(err);
+    setProdutos([]);
+  } finally {
+    setLoading(false);
   }
-
+}
   useEffect(() => {
     load(1, "");
   }, []);
