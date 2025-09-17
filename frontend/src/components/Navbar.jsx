@@ -11,24 +11,75 @@ export default function Navbar() {
 
   return (
     <header className="bg-white shadow sticky top-0 z-30">
-      <div className="container flex items-center justify-between py-4">
+      <div className="container mx-auto flex items-center justify-between py-4 px-6">
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Logo Loja de Pesca" className="h-10 w-auto" />
-          <div className="text-xl font-bold text-deepsea">PescaPro</div>
+          <div className="text-2xl font-extrabold text-sea select-none">PescaPro</div>
         </Link>
 
-        <nav className="flex items-center gap-6">
-          <Link to="/" className="text-gray-700 hover:text-deepsea">Produtos</Link>
-          <Link to="/pedidos" className="text-gray-700 hover:text-deepsea">Pedidos</Link>
-          <Link to="/carrinho" className="text-gray-700 hover:text-deepsea">Carrinho ({items.length})</Link>
+        <nav className="flex items-center gap-8 text-gray-700">
+          <Link
+            to="/"
+            className="hover:text-sea font-medium transition duration-150"
+            aria-label="Página de Produtos"
+          >
+            Produtos
+          </Link>
+          <Link
+            to="/meus-pedidos"
+            className="hover:text-sea font-medium transition duration-150"
+            aria-label="Página de Pedidos"
+          >
+            Pedidos
+          </Link>
+          <Link
+            to="/carrinho"
+            className="hover:text-sea font-medium transition duration-150"
+            aria-label="Carrinho de compras"
+          >
+            Carrinho
+            <span className="ml-1 bg-sea text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+              {items.length}
+            </span>
+          </Link>
+
           {user ? (
             <>
-              <Link to="/perfil" className="text-gray-700 hover:text-deepsea">Olá, {user.nome}</Link>
-              {user.tipo === "admin" && <Link to="/admin" className="text-gray-700 hover:text-deepsea">Admin</Link>}
-              <button onClick={() => { logout(); nav("/"); }} className="ml-2 px-3 py-1 bg-highlight text-white rounded">Sair</button>
+              <Link
+                to="/perfil"
+                className="hover:text-sea font-medium transition duration-150"
+                aria-label="Perfil do usuário"
+              >
+                Olá, {user.name}
+              </Link>
+              {user.userType === "admin" && (
+                <Link
+                  to="/admin/dashboard"
+                  className="hover:text-sea font-medium transition duration-150"
+                  aria-label="Página Admin"
+                >
+                  Admin
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  logout();
+                  nav("/");
+                }}
+                className="ml-4 px-4 py-2 bg-highlight text-white rounded-xl font-semibold hover:bg-highlight focus:outline-none focus:ring-2 focus:ring-highlight transition"
+                aria-label="Sair da conta"
+              >
+                Sair
+              </button>
             </>
           ) : (
-            <Link to="/login" className="px-3 py-1 bg-sea text-white rounded">Entrar</Link>
+            <Link
+              to="/login"
+              className="px-4 py-2 bg-sea text-white rounded-xl font-semibold hover:bg-sea focus:outline-none focus:ring-2 focus:ring-sea transition"
+              aria-label="Entrar na conta"
+            >
+              Entrar
+            </Link>
           )}
         </nav>
       </div>

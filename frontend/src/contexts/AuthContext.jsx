@@ -1,14 +1,12 @@
-// frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api";
+import * as api from "../services/api";
 import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const s = localStorage.getItem("user");
-    return s ? JSON.parse(s) : null;
+    try { const s = localStorage.getItem("user"); return s ? JSON.parse(s) : null; } catch { return null; }
   });
 
   useEffect(() => {
@@ -16,63 +14,62 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("user");
   }, [user]);
 
-  async function register({ nome, email, senha }) {
-    try {
-      const body = { name: nome, email, password: senha };
-      const res = await api.register(body);
-      toast.success("Conta criada com sucesso!");
-      return res.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Erro ao cadastrar");
-      throw err;
-    }
-  }
-
   async function login({ email, senha }) {
+    // backend may expect { email, password } or { email, senha }
     try {
-      const res = await api.login({ email, password: senha });
-      const payload = res.data || {};
-
-      const token = payload.token ?? payload.accessToken ?? payload.access_token ?? null;
-      const userObj = payload.user ?? payload.usuario ?? payload.usuario ?? payload.userData ?? payload;
-
-      if (!token) {
-        console.warn("Login response without token, saving nothing");
-      } else {
-        localStorage.setItem("token", token);
+      // attempt with standard field 'password' first
+      let res;
+      try {
+        res = await api.login({ email, password: senha });
+      } catch (err) {
+        // fallback: try with senha field (some backends expect 'senha')
+        res = await api.login({ email, senha });
       }
+      const payload = res.data ?? {};
+      const token = payload.token ?? payload.accessToken ?? payload.access_token ?? payload.tokenJwt ?? null;
+      const userObj = payload.user ?? payload.usuario ?? payload;
 
-      let normalizedUser = null;
-      if (userObj && typeof userObj === "object") {
-        normalizedUser = {
-          id: userObj.id,
-          nome: userObj.name ?? userObj.nome ?? userObj.username ?? "",
-          email: userObj.email ?? "",
-          tipo: userObj.userType ?? userObj.tipo ?? userObj.role ?? "customer",
-        };
-      }
-
-      if (normalizedUser) setUser(normalizedUser);
+      if (token) localStorage.setItem("token", token);
+      const normalizedUser = userObj ? {
+        id: userObj.id,
+        name: userObj.name ?? "",
+        email: userObj.email ?? "",
+        userType: userObj.userType ?? userObj.role ?? "customer"
+      } : null;
+      setUser(normalizedUser);
       toast.success("Login realizado");
       return normalizedUser;
     } catch (err) {
-      toast.error("Credenciais inválidas");
+      toast.error("Falha no login");
       throw err;
     }
   }
 
   function logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   }
 
-  return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  async function refreshUser() {
+    try {
+      const res = await api.me();
+      const u = res.data ?? res;
+      if (u) {
+        const normalizedUser = {
+          id: u.id,
+          name: u.name ?? "",
+          email: u.email ?? "",
+          userType: u.userType ?? "customer"
+        };
+        setUser(normalizedUser);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  return <AuthContext.Provider value={{ user, login, logout, refreshUser, setUser }}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }
