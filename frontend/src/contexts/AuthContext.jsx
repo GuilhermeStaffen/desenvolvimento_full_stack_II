@@ -6,7 +6,12 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    try { const s = localStorage.getItem("user"); return s ? JSON.parse(s) : null; } catch { return null; }
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -15,32 +20,35 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   async function login({ email, senha }) {
-    // backend may expect { email, password } or { email, senha }
     try {
-      // attempt with standard field 'password' first
-      let res;
-      try {
-        res = await api.login({ email, password: senha });
-      } catch (err) {
-        // fallback: try with senha field (some backends expect 'senha')
-        res = await api.login({ email, senha });
-      }
+      const res = await api.login({ email, password: senha });
       const payload = res.data ?? {};
-      const token = payload.token ?? payload.accessToken ?? payload.access_token ?? payload.tokenJwt ?? null;
-      const userObj = payload.user ?? payload.usuario ?? payload;
+      const token = payload.token ?? null;
+      const userObj = payload.user ?? payload;
 
-      if (token) localStorage.setItem("token", token);
-      const normalizedUser = userObj ? {
+      if (!token) throw new Error("Token ausente no retorno do login");
+
+      localStorage.setItem("token", token);
+
+      const normalizedUser = {
         id: userObj.id,
         name: userObj.name ?? "",
         email: userObj.email ?? "",
-        userType: userObj.userType ?? userObj.role ?? "customer"
-      } : null;
+        userType: userObj.userType ?? "customer",
+        street: userObj.street ?? "",
+        number: userObj.number ?? "",
+        city: userObj.city ?? "",
+        state: userObj.state ?? "",
+        zipcode: userObj.zipcode ?? "",
+        country: userObj.country ?? ""
+      };
+
       setUser(normalizedUser);
-      toast.success("Login realizado");
+      toast.success("Login realizado com sucesso!");
       return normalizedUser;
     } catch (err) {
-      toast.error("Falha no login");
+      console.error(err);
+      toast.error("Falha no login. Verifique suas credenciais.");
       throw err;
     }
   }
@@ -60,16 +68,29 @@ export function AuthProvider({ children }) {
           id: u.id,
           name: u.name ?? "",
           email: u.email ?? "",
-          userType: u.userType ?? "customer"
+          userType: u.userType ?? "customer",
+          street: u.street ?? "",
+          number: u.number ?? "",
+          city: u.city ?? "",
+          state: u.state ?? "",
+          zipcode: u.zipcode ?? "",
+          country: u.country ?? ""
         };
         setUser(normalizedUser);
       }
     } catch (err) {
-      // ignore
+      console.error("Erro ao buscar usuário logado", err);
+      logout();
     }
   }
 
-  return <AuthContext.Provider value={{ user, login, logout, refreshUser, setUser }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, logout, refreshUser, setUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export function useAuth() { return useContext(AuthContext); }
+export function useAuth() {
+  return useContext(AuthContext);
+}

@@ -5,29 +5,28 @@ import { updateUser } from "../services/api";
 export default function Profile() {
   const { user, setUser } = useAuth();
 
-  const [nome, setNome] = useState(user?.name ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [name, setName] = useState(user['name'] ?? "");
+  const [email, setEmail] = useState(user['email'] ?? "");
   const [address, setAddress] = useState({
-    street: user?.address?.street ?? "",
-    number: user?.address?.number ?? "",
-    city: user?.address?.city ?? "",
-    state: user?.address?.state ?? "",
-    zipcode: user?.address?.zipcode ?? "",
-    country: user?.address?.country ?? "",
+    street: user['street'] ?? "",
+    number: user['number'] ?? "",
+    city: user['city'] ?? "",
+    state: user['state'] ?? "",
+    zipcode: user['zipcode'] ?? "",
+    country: user['country'] ?? "",
   });
 
   const [saving, setSaving] = useState(false);
-
   useEffect(() => {
-    setNome(user?.nome ?? "");
-    setEmail(user?.email ?? "");
+    setName(user['name'] ?? "");
+    setEmail(user['email'] ?? "");
     setAddress({
-      street: user?.address?.street ?? "",
-      number: user?.address?.number ?? "",
-      city: user?.address?.city ?? "",
-      state: user?.address?.state ?? "",
-      zipcode: user?.address?.zipcode ?? "",
-      country: user?.address?.country ?? "",
+    street: user['street'] ?? "",
+    number: user['number'] ?? "",
+    city: user['city'] ?? "",
+    state: user['state'] ?? "",
+    zipcode: user['zipcode'] ?? "",
+    country: user['country'] ?? "",
     });
   }, [user]);
 
@@ -42,7 +41,7 @@ export default function Profile() {
 
     try {
       const body = {
-        name: nome,
+        name,
         email,
         address,
       };
@@ -52,7 +51,7 @@ export default function Profile() {
 
       const normalized = {
         id: u.id ?? user.id,
-        nome: u.name ?? user.name,
+        name: u.name ?? user.name,
         email: u.email ?? email,
         address: u.address ?? address,
         userType: u.userType ?? user.userType,
@@ -82,18 +81,18 @@ export default function Profile() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div>
               <label
-                htmlFor="nome"
+                htmlFor="name"
                 className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
               >
-                Nome Completo
+                Name Completo
               </label>
               <input
-                id="nome"
+                id="name"
                 type="text"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="Nome completo"
+                placeholder="Name completo"
                 className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
                 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
