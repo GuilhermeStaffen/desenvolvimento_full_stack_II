@@ -1,14 +1,17 @@
-// frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api";
+import * as api from "../services/api";
 import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const s = localStorage.getItem("user");
-    return s ? JSON.parse(s) : null;
+    try {
+      const s = localStorage.getItem("user");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -16,58 +19,73 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("user");
   }, [user]);
 
-  async function register({ nome, email, senha }) {
-    try {
-      const body = { name: nome, email, password: senha };
-      const res = await api.register(body);
-      toast.success("Conta criada com sucesso!");
-      return res.data;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Erro ao cadastrar");
-      throw err;
-    }
-  }
-
   async function login({ email, senha }) {
     try {
       const res = await api.login({ email, password: senha });
-      const payload = res.data || {};
+      const payload = res.data ?? {};
+      const token = payload.token ?? null;
+      const userObj = payload.user ?? payload;
 
-      const token = payload.token ?? payload.accessToken ?? payload.access_token ?? null;
-      const userObj = payload.user ?? payload.usuario ?? payload.usuario ?? payload.userData ?? payload;
+      if (!token) throw new Error("Token ausente no retorno do login");
 
-      if (!token) {
-        console.warn("Login response without token, saving nothing");
-      } else {
-        localStorage.setItem("token", token);
-      }
+      localStorage.setItem("token", token);
 
-      let normalizedUser = null;
-      if (userObj && typeof userObj === "object") {
-        normalizedUser = {
-          id: userObj.id,
-          nome: userObj.name ?? userObj.nome ?? userObj.username ?? "",
-          email: userObj.email ?? "",
-          tipo: userObj.userType ?? userObj.tipo ?? userObj.role ?? "customer",
-        };
-      }
+      const normalizedUser = {
+        id: userObj.id,
+        name: userObj.name ?? "",
+        email: userObj.email ?? "",
+        userType: userObj.userType ?? "customer",
+        street: userObj.street ?? "",
+        number: userObj.number ?? "",
+        city: userObj.city ?? "",
+        state: userObj.state ?? "",
+        zipcode: userObj.zipcode ?? "",
+        country: userObj.country ?? ""
+      };
 
-      if (normalizedUser) setUser(normalizedUser);
-      toast.success("Login realizado");
+      setUser(normalizedUser);
+      toast.success("Login realizado com sucesso!");
       return normalizedUser;
     } catch (err) {
-      toast.error("Credenciais inválidas");
+      console.error(err);
+      toast.error("Falha no login. Verifique suas credenciais.");
       throw err;
     }
   }
 
   function logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   }
 
+  async function refreshUser() {
+    try {
+      const res = await api.me();
+      const u = res.data ?? res;
+      if (u) {
+        const normalizedUser = {
+          id: u.id,
+          name: u.name ?? "",
+          email: u.email ?? "",
+          userType: u.userType ?? "customer",
+          street: u.street ?? "",
+          number: u.number ?? "",
+          city: u.city ?? "",
+          state: u.state ?? "",
+          zipcode: u.zipcode ?? "",
+          country: u.country ?? ""
+        };
+        setUser(normalizedUser);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar usuário logado", err);
+      logout();
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser, setUser }}>
       {children}
     </AuthContext.Provider>
   );

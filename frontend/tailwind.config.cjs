@@ -6,10 +6,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        sea: '#0ea5a4',
+        sea: '#62babaff',
         deepsea: '#065f46',
         accent: '#06b6d4',
-        highlight: '#f97316'
+        highlight: '#f93016ff'
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui']
