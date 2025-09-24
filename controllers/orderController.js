@@ -196,7 +196,8 @@ module.exports = {
                 ]
               }
             ]
-          }
+          },
+          { model: User, attributes: ['id', 'name', 'email' ] }
         ],
         limit: limitNumber,
         offset,
@@ -208,6 +209,8 @@ module.exports = {
       const formattedOrders = orders.map(order => ({
         id: order.id,
         userId: order.userId,
+        userName: order.User?.name,
+        userEmail: order.User?.email,
         status: order.status,
         total: order.total,
         fullAddress: order.fullAddress,
@@ -235,6 +238,59 @@ module.exports = {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Erro interno: ' + error });
+    }
+  },
+
+  async cancelOrder(req, res) {
+    try {
+      const orderId = req.params.id;
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const order = await Order.findByPk(orderId);
+      if (!order) {
+        return res.status(404).json({ error: 'Pedido não encontrado.' });
+      }
+      Order.destroy({ where: { id: orderId } });
+      res.status(200).json({ message: 'Pedido cancelado com sucesso.' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  },
+
+  async shipOrder(req, res) {
+    try {
+      const orderId = req.params.id;
+      const order = await Order.findByPk(orderId);
+      if (!order) {
+        return res.status(404).json({ error: 'Pedido não encontrado.' });
+      }
+      if (order.status !== 'placed') {
+        return res.status(400).json({ error: 'Apenas pedidos com status "placed" podem ser marcados como "shipped".' });
+      }
+      await order.update({ status: 'shipped' });
+      res.status(200).json({ message: 'Pedido marcado como "shipped" com sucesso.' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
+    }
+  },
+
+  async deliverOrder(req, res) {
+    try {
+      const orderId = req.params.id;
+      const order = await Order.findByPk(orderId);
+      if (!order) {
+        return res.status(404).json({ error: 'Pedido não encontrado.' });
+      }
+      if (order.status !== 'shipped') {
+        return res.status(400).json({ error: 'Apenas pedidos com status "shipped" podem ser marcados como "delivered".' });
+      }
+      await order.update({ status: 'delivered' });
+      res.status(200).json({ message: 'Pedido marcado como "delivered" com sucesso.' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erro interno' });
     }
   }
 };

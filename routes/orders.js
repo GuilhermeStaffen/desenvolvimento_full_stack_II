@@ -46,6 +46,12 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
  *         userId:
  *           type: integer
  *           example: 5
+ *         userName: 
+ *           type: string
+ *           example: "João Silva"
+ *         userEmail:
+ *           type: string
+ *           example: "email@email.com"
  *         status:
  *           type: string
  *           enum: [placed, shipped, delivered, canceled]
@@ -232,11 +238,159 @@ const authorizeRoles = require('../middlewares/roleMiddleware');
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ * 
  */
+
+/**
+ * @swagger
+ * /orders/{id}/canceled:
+ *   post:
+ *     summary: "Cancela um pedido (apenas admin)"
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: "ID do pedido a ser cancelado"
+ *     responses:
+ *       200:
+ *         description: "Pedido cancelado com sucesso"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pedido cancelado com sucesso."
+ *       403:
+ *         description: "Acesso negado. Apenas administradores."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Pedido não encontrado."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Erro interno."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /orders/{id}/shipped:
+ *   post:
+ *     summary: "Atualiza pedido para 'shipped' (apenas admin)"
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: "ID do pedido a ser atualizado"
+ *     responses:
+ *       200:
+ *         description: "Pedido marcado como 'shipped'"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pedido marcado como \"shipped\" com sucesso."
+ *       400:
+ *         description: "Status inválido. Apenas pedidos com status 'placed' podem ser enviados."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: "Acesso negado. Apenas administradores."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Pedido não encontrado."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Erro interno."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /orders/{id}/delivered:
+ *   post:
+ *     summary: "Atualiza pedido para 'delivered' (apenas admin)"
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: "ID do pedido a ser atualizado"
+ *     responses:
+ *       200:
+ *         description: "Pedido marcado como 'delivered'"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pedido marcado como \"delivered\" com sucesso."
+ *       400:
+ *         description: "Status inválido. Apenas pedidos com status 'shipped' podem ser entregues."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: "Acesso negado. Apenas administradores."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Pedido não encontrado."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Erro interno."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 
 
 router.post('/', authMiddleware, orderController.create);
 router.get('/my-orders', authMiddleware, orderController.myOrders);
 router.get('/', authMiddleware, authorizeRoles('admin'), orderController.getAll);
-
+router.post('/:id/canceled', authMiddleware, authorizeRoles('admin'), orderController.cancelOrder);
+router.post('/:id/shipped', authMiddleware, authorizeRoles('admin'), orderController.shipOrder);
+router.post('/:id/delivered', authMiddleware, authorizeRoles('admin'), orderController.deliverOrder);
 module.exports = router;
