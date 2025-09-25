@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {  listProdutos, createProduto, updateProduto, deleteProduto, listPedidos,} from "../services/api";
+import {
+  listProdutos, createProduto, updateProduto, deleteProduto, listPedidos, cancelPedido, shipPedido, deliverPedido
+} from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
@@ -46,6 +48,8 @@ function ProductForm({ current, onSave, onCancel }) {
       quantity: Number(form.quantity),
     });
   }
+
+
 
   return (
     <form onSubmit={submit} className="grid gap-5">
@@ -113,8 +117,11 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [selected, setSelected] = useState(null);
+
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   async function loadProdutos() {
     const res = await listProdutos({ page: 1, limit: 200 });
@@ -124,10 +131,16 @@ export default function AdminDashboard() {
   async function loadOrders(p = 1) {
     setLoadingOrders(true);
     try {
-      const res = await listPedidos({ page: p, limit: 20 });
+      const res = await listPedidos({ page: p, limit: 5 }); // limite fixo de 5 por exemplo
       const payload = res.data ?? res;
       const items = payload.items ?? payload.rows ?? payload.data ?? [];
       setOrders(items);
+
+      // pega infos de paginação do backend
+      const total = payload.total ?? items.length;
+      const limit = payload.limit ?? 5;
+      setTotalPages(Math.ceil(total / limit));
+      setPage(payload.page ?? p);
     } catch (err) {
       console.error(err);
     } finally {
@@ -242,7 +255,10 @@ export default function AdminDashboard() {
                     </time>
                   </header>
                   <p className="mb-2 text-gray-700 font-medium">
-                    Usuário: <span className="text-gray-900 font-semibold">{o.userId}</span>
+                    Usuário: <span className="text-gray-900 font-semibold">{o.userId} - {o.userName}</span>
+                  </p>
+                  <p className="mb-2 text-gray-700 font-medium">
+                    Endereço: <span className="text-gray-900 font-semibold">{o.fullAddress}</span>
                   </p>
                   <p className="mb-2 text-gray-700 font-medium">
                     Status: <span className="text-gray-900 font-semibold">{o.status}</span>
@@ -258,6 +274,30 @@ export default function AdminDashboard() {
                   <p className="text-right font-extrabold text-sea text-lg">
                     Total: R$ {(o.total ?? 0).toFixed(2)}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-3 justify-end">
+                    <button
+                      onClick={() => handleCancel(o.id)}
+                      className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-semibold"
+                    >
+                      Cancelar
+                    </button>
+                    {o.status === "placed" && (
+                      <button
+                        onClick={() => handleShip(o.id)}
+                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm font-semibold"
+                      >
+                        Enviar
+                      </button>
+                    )}
+                    {o.status === "shipped" && (
+                      <button
+                        onClick={() => handleDeliver(o.id)}
+                        className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition text-sm font-semibold"
+                      >
+                        Entregar
+                      </button>
+                    )}
+                  </div>
                 </article>
               ))}
             </div>

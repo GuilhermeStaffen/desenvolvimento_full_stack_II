@@ -89,6 +89,9 @@ export function deleteCartItem(productId) { return client.delete(`/cart/${produc
 export function createPedido(body) { return client.post("/orders", body); }
 export function listPedidos(params = {}) { return client.get("/orders", { params }); }
 export function listMyOrders(params = {}) { return client.get("/orders/my-orders", { params }); }
+export function cancelPedido(id) { return client.post(`/orders/${id}/canceled`); }
+export function shipPedido(id) { return client.post(`/orders/${id}/shipped`); }
+export function deliverPedido(id) { return client.post(`/orders/${id}/delivered`); }
 
 // default export to keep compatibility with older imports
 export default {

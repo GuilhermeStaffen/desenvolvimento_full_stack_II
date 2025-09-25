@@ -244,13 +244,11 @@ module.exports = {
   async cancelOrder(req, res) {
     try {
       const orderId = req.params.id;
-      const userId = req.user.id;
-      const userRole = req.user.role;
       const order = await Order.findByPk(orderId);
       if (!order) {
         return res.status(404).json({ error: 'Pedido não encontrado.' });
       }
-      Order.destroy({ where: { id: orderId } });
+      order.update({ status: 'canceled' });
       res.status(200).json({ message: 'Pedido cancelado com sucesso.' });
     } catch (error) {
       console.error(error);
