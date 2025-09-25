@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
         name: it.name ?? it.product?.name ?? it.product?.title ?? "",
         price: Number(it.unitPrice ?? it.price ?? it.product?.price ?? 0),
         quantity: it.quantity ?? it.qty ?? 1,
-        image: it.product?.image ?? it.image ?? null
+        images: it.product?.images ?? it.images ?? null
       }));
       setItems(mapped);
     } catch (err) {
@@ -69,8 +69,15 @@ export function CartProvider({ children }) {
     }
   }
 
-  function updateQuantity(id, qtd) {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qtd } : i));
+ async function updateQuantity(id, qtd) {
+    try {
+      await api.putCart(id, qtd);
+      toast.success("Quantidade atualizada no carrinho (server)");
+      await syncFromBackend();
+    } catch (err) {
+      setItems(prev => prev.filter(i => i.id !== id));
+      toast.success("Quantidade atualizada no carrinho (local)");
+    }
   }
 
   function clearCart() {

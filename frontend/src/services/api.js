@@ -18,7 +18,7 @@ function normalizeProduct(p) {
     description: p.description ?? "",
     price: Number(p.price ?? 0),
     quantity: p.quantity ?? 0,
-    image: p.image ?? null,
+    images: p.images ?? null,
     raw: p
   };
 }
@@ -32,6 +32,7 @@ export function register(body) { return client.post("/users", body); }
 
 // USERS
 export function listUsers() { return client.get("/users"); }
+export function getUser(id) { return client.get(`/users/${id}`); }
 export function updateUser(id, body) { return client.put(`/users/${id}`, body); }
 
 // PRODUCTS
@@ -68,6 +69,7 @@ export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 // CART
 export function getCart() { return client.get("/cart"); }
 export function postCart(productId, quantity=1) { return client.post("/cart", { productId, quantity }); }
+export function putCart(productId, quantity) { return client.put(`/cart/${productId}`, { quantity }); }
 export function deleteCartItem(productId) { return client.delete(`/cart/${productId}`); }
 
 // ORDERS
