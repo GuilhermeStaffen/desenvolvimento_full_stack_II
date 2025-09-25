@@ -69,6 +69,7 @@ export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 // CART
 export function getCart() { return client.get("/cart"); }
 export function postCart(productId, quantity=1) { return client.post("/cart", { productId, quantity }); }
+export function putCart(productId, quantity) { return client.put(`/cart/${productId}`, { quantity }); }
 export function deleteCartItem(productId) { return client.delete(`/cart/${productId}`); }
 
 // ORDERS
