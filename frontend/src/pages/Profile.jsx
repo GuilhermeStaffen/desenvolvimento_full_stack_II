@@ -1,63 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { updateUser } from "../services/api";
+import { getUser, updateUser } from "../services/api";
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
-
-  const [name, setName] = useState(user['name'] ?? "");
-  const [email, setEmail] = useState(user['email'] ?? "");
-  const [address, setAddress] = useState({
-    street: user['street'] ?? "",
-    number: user['number'] ?? "",
-    city: user['city'] ?? "",
-    state: user['state'] ?? "",
-    zipcode: user['zipcode'] ?? "",
-    country: user['country'] ?? "",
+  const { user } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: {
+      street: "",
+      number: "",
+      city: "",
+      state: "",
+      zipcode: "",
+      country: "",
+    },
   });
 
-  const [saving, setSaving] = useState(false);
   useEffect(() => {
-    setName(user['name'] ?? "");
-    setEmail(user['email'] ?? "");
-    setAddress({
-    street: user['street'] ?? "",
-    number: user['number'] ?? "",
-    city: user['city'] ?? "",
-    state: user['state'] ?? "",
-    zipcode: user['zipcode'] ?? "",
-    country: user['country'] ?? "",
-    });
+    async function load() {
+      setLoading(true);
+      try {
+        const u = await getUser(user.id);
+        setUserData(u.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, [user]);
 
-  function handleAddressChange(e) {
+  useEffect(() => {
+    if (!userData) return;
+    setForm({
+      name: userData.name ?? "",
+      email: userData.email ?? "",
+      phone: userData.phone ?? "",
+      address: userData.address ?? {
+        street: "",
+        number: "",
+        city: "",
+        state: "",
+        zipcode: "",
+        country: "",
+      },
+    });
+  }, [userData]);
+
+  function handleChange(e) {
     const { name, value } = e.target;
-    setAddress((prev) => ({ ...prev, [name]: value }));
+    if (name in form.address) {
+      setForm((prev) => ({
+        ...prev,
+        address: { ...prev.address, [name]: value },
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   }
 
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
-
     try {
-      const body = {
-        name,
-        email,
-        address,
-      };
-
-      const res = await updateUser(user.id, body);
-      const u = res.data ?? res;
-
-      const normalized = {
-        id: u.id ?? user.id,
-        name: u.name ?? user.name,
-        email: u.email ?? email,
-        address: u.address ?? address,
-        userType: u.userType ?? user.userType,
-      };
-
-      setUser(normalized);
+      const res = await updateUser(userData.id, form);
+      setUserData(res.data ?? res);
       alert("Perfil atualizado com sucesso!");
     } catch (err) {
       console.error(err);
@@ -67,180 +80,171 @@ export default function Profile() {
     }
   }
 
+  if (loading)
+    return (
+      <div className="text-center py-20 text-gray-600 text-xl font-medium select-none">
+        Carregando...
+      </div>
+    );
+  if (!userData)
+    return (
+      <div className="text-center py-20 text-gray-600 text-xl font-medium italic select-none">
+        Usuário não encontrado.
+      </div>
+    );
+
   return (
     <div className="container mx-auto max-w-4xl px-8 py-12 bg-white rounded-2xl shadow-xl">
       <h2 className="text-4xl font-extrabold mb-10 text-gray-900 text-center tracking-wide">
         Meu Perfil
       </h2>
       <form onSubmit={handleSave} className="space-y-10">
-        {/* Dados Pessoais */}
         <section>
           <h3 className="text-2xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-2">
             Dados Pessoais
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div>
-              <label
-                htmlFor="name"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Name Completo
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={form.name}
+                onChange={handleChange}
                 required
                 placeholder="Name completo"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
             <div>
-              <label
-                htmlFor="email"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Email
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={handleChange}
                 required
                 placeholder="Digite seu email"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
+                Telefone
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                required
+                placeholder="Digite seu telefone"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
           </div>
         </section>
 
-        {/* Endereço */}
         <section>
           <h3 className="text-2xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-2">
             Endereço
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-6">
             <div className="sm:col-span-2">
-              <label
-                htmlFor="street"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="street" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Rua
               </label>
               <input
                 id="street"
                 name="street"
-                value={address.street}
-                onChange={handleAddressChange}
+                value={form.address.street}
+                onChange={handleChange}
                 placeholder="Sua rua"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
             <div>
-              <label
-                htmlFor="number"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="number" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Número
               </label>
               <input
                 id="number"
                 name="number"
-                value={address.number}
-                onChange={handleAddressChange}
+                value={form.address.number}
+                onChange={handleChange}
                 placeholder="Número"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-8">
             <div>
-              <label
-                htmlFor="city"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Cidade
               </label>
               <input
                 id="city"
                 name="city"
-                value={address.city}
-                onChange={handleAddressChange}
+                value={form.address.city}
+                onChange={handleChange}
                 placeholder="Cidade"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
             <div>
-              <label
-                htmlFor="state"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="state" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 Estado
               </label>
               <input
                 id="state"
                 name="state"
-                value={address.state}
-                onChange={handleAddressChange}
+                value={form.address.state}
+                onChange={handleChange}
                 placeholder="Estado"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
             <div>
-              <label
-                htmlFor="zipcode"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="zipcode" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 CEP
               </label>
               <input
                 id="zipcode"
                 name="zipcode"
-                value={address.zipcode}
-                onChange={handleAddressChange}
+                value={form.address.zipcode}
+                onChange={handleChange}
                 placeholder="CEP"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
             <div>
-              <label
-                htmlFor="country"
-                className="block mb-2 text-sm font-medium text-gray-700 tracking-wide"
-              >
+              <label htmlFor="country" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
                 País
               </label>
               <input
                 id="country"
                 name="country"
-                value={address.country}
-                onChange={handleAddressChange}
+                value={form.address.country}
+                onChange={handleChange}
                 placeholder="País"
-                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400
-                focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>
           </div>
         </section>
 
-        {/* Botão Salvar */}
         <button
           type="submit"
           disabled={saving}
-          className={`w-full py-4 rounded-xl text-white font-semibold ${
-            saving
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-sea hover:from-sea hover:to-sea"
-          } shadow-lg transition`}
+          className={`w-full py-4 rounded-xl text-white font-semibold ${saving ? "bg-gray-400 cursor-not-allowed" : "bg-sea hover:from-sea hover:to-sea"} shadow-lg transition`}
         >
           {saving ? "Salvando..." : "Salvar Alterações"}
         </button>

@@ -32,6 +32,7 @@ export function register(body) { return client.post("/users", body); }
 
 // USERS
 export function listUsers() { return client.get("/users"); }
+export function getUser(id) { return client.get(`/users/${id}`); }
 export function updateUser(id, body) { return client.put(`/users/${id}`, body); }
 
 // PRODUCTS
