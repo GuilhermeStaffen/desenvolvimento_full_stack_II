@@ -17,6 +17,7 @@ export function CartProvider({ children }) {
   async function syncFromBackend() {
     setLoading(true);
     try {
+      if (!localStorage.getItem("token")) throw new Error("No token");
       const res = await api.getCart();
       const data = res.data ?? res;
       const arr = Array.isArray(data) ? data : (data.items ?? data.rows ?? []);

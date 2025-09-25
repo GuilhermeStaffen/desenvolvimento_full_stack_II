@@ -10,6 +10,19 @@ client.interceptors.request.use((config) => {
   return config;
 }, (err) => Promise.reject(err));
 
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("cart");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 function normalizeProduct(p) {
   if (!p) return null;
   return {

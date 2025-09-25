@@ -10,7 +10,7 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
-  const { addToCart } = useCart();
+  const { items, addToCart } = useCart();
 
   async function load(p = 1, query = "") {
     setLoading(true);
