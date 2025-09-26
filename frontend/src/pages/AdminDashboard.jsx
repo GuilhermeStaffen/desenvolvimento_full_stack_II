@@ -305,12 +305,12 @@ export default function AdminDashboard() {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-3 justify-end">
                       {o.status != "canceled" && (
-                      <button
-                        onClick={() => handleCancel(o.id)}
-                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-semibold"
-                      >
-                        Cancelar
-                      </button>
+                        <button
+                          onClick={() => handleCancel(o.id)}
+                          className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-semibold"
+                        >
+                          Cancelar
+                        </button>
                       )}
                       {o.status === "placed" && (
                         <button
@@ -336,17 +336,25 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => loadOrders(page - 1)}
                   disabled={page <= 1}
-                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page <= 1
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
+                    }`}
+                  aria-label="Página anterior"
                 >
                   Anterior
                 </button>
-                <span className="text-gray-700 font-medium">
-                  Página {page} de {totalPages}
+                <span className="font-semibold text-gray-700 text-lg select-none">
+                  {page} / {totalPages}
                 </span>
                 <button
                   onClick={() => loadOrders(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page >= totalPages
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
+                    }`}
+                  aria-label="Próxima página"
                 >
                   Próxima
                 </button>
