@@ -13,7 +13,6 @@ npm install
 ```bash
 cd frontend
 npm install
-npx tailwindcss init -p    # se ainda não inicializou; opcional
 ```
 
 3. Na pasta raiz do projeto, execute o comando abaixo para executar o front e back juntos
