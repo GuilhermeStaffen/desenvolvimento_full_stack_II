@@ -17,6 +17,7 @@ export function CartProvider({ children }) {
   async function syncFromBackend() {
     setLoading(true);
     try {
+      if (!localStorage.getItem("token")) throw new Error("No token");
       const res = await api.getCart();
       const data = res.data ?? res;
       const arr = Array.isArray(data) ? data : (data.items ?? data.rows ?? []);
@@ -42,13 +43,15 @@ export function CartProvider({ children }) {
   }, []);
 
   async function addToCart(prod, qtd = 1) {
-    // add to backend if available
     try {
       await api.postCart(prod.id ?? prod.productId ?? prod.raw?.id, qtd);
       toast.success("Adicionado ao carrinho (server)");
       await syncFromBackend();
     } catch (err) {
-      // fallback to local add
+      if (err.response && err.response.status === 400 && err.response.data?.error === "Estoque insuficiente") {
+        toast.error("Estoque insuficiente para este produto");
+        return; 
+      }
       setItems(prev => {
         const found = prev.find(i => i.id === prod.id);
         if (found) return prev.map(i => i.id === prod.id ? { ...i, quantity: i.quantity + qtd } : i);
@@ -69,12 +72,16 @@ export function CartProvider({ children }) {
     }
   }
 
- async function updateQuantity(id, qtd) {
+  async function updateQuantity(id, qtd) {
     try {
       await api.putCart(id, qtd);
       toast.success("Quantidade atualizada no carrinho (server)");
       await syncFromBackend();
     } catch (err) {
+      if (err.response && err.response.status === 400 && err.response.data?.error === "Estoque insuficiente") {
+        toast.error("Estoque insuficiente para este produto");
+        return; 
+      }
       setItems(prev => prev.filter(i => i.id !== id));
       toast.success("Quantidade atualizada no carrinho (local)");
     }

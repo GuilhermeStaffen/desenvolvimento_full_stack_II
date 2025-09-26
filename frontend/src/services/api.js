@@ -10,6 +10,19 @@ client.interceptors.request.use((config) => {
   return config;
 }, (err) => Promise.reject(err));
 
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("cart");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 function normalizeProduct(p) {
   if (!p) return null;
   return {
@@ -76,6 +89,9 @@ export function deleteCartItem(productId) { return client.delete(`/cart/${produc
 export function createPedido(body) { return client.post("/orders", body); }
 export function listPedidos(params = {}) { return client.get("/orders", { params }); }
 export function listMyOrders(params = {}) { return client.get("/orders/my-orders", { params }); }
+export function cancelPedido(id) { return client.post(`/orders/${id}/canceled`); }
+export function shipPedido(id) { return client.post(`/orders/${id}/shipped`); }
+export function deliverPedido(id) { return client.post(`/orders/${id}/delivered`); }
 
 // default export to keep compatibility with older imports
 export default {

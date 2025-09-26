@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {  listProdutos, createProduto, updateProduto, deleteProduto, listPedidos,} from "../services/api";
+import {
+  listProdutos, createProduto, updateProduto, deleteProduto, listPedidos, cancelPedido, shipPedido, deliverPedido
+} from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
@@ -46,6 +48,8 @@ function ProductForm({ current, onSave, onCancel }) {
       quantity: Number(form.quantity),
     });
   }
+
+
 
   return (
     <form onSubmit={submit} className="grid gap-5">
@@ -113,8 +117,11 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [selected, setSelected] = useState(null);
+
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   async function loadProdutos() {
     const res = await listProdutos({ page: 1, limit: 200 });
@@ -124,14 +131,48 @@ export default function AdminDashboard() {
   async function loadOrders(p = 1) {
     setLoadingOrders(true);
     try {
-      const res = await listPedidos({ page: p, limit: 20 });
+      const res = await listPedidos({ page: p, limit: 5 });
       const payload = res.data ?? res;
       const items = payload.items ?? payload.rows ?? payload.data ?? [];
+
       setOrders(items);
+
+      setTotalPages(payload.totalPages ?? Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? 5)));
+      setPage(payload.page ?? p);
     } catch (err) {
       console.error(err);
     } finally {
       setLoadingOrders(false);
+    }
+  }
+
+  async function handleCancel(id) {
+    try {
+      await cancelPedido(id);
+      toast.success("Pedido cancelado com sucesso!");
+      loadOrders();
+    } catch {
+      toast.error("Erro ao cancelar pedido");
+    }
+  }
+
+  async function handleShip(id) {
+    try {
+      await shipPedido(id);
+      toast.success("Pedido marcado como enviado!");
+      loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Erro ao enviar pedido");
+    }
+  }
+
+  async function handleDeliver(id) {
+    try {
+      await deliverPedido(id);
+      toast.success("Pedido marcado como entregue!");
+      loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Erro ao entregar pedido");
     }
   }
 
@@ -221,46 +262,104 @@ export default function AdminDashboard() {
           </section>
         </div>
 
-        <section className="bg-white p-8 rounded-xl shadow-lg max-h-[480px] overflow-y-auto">
+        <section className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold mb-6 text-center">Pedidos Recentes</h2>
           {loadingOrders ? (
             <p className="text-center text-gray-500 py-12 text-lg select-none">Carregando...</p>
           ) : orders.length === 0 ? (
             <p className="text-center text-gray-400 py-12 italic select-none">Nenhum pedido encontrado</p>
           ) : (
-            <div className="space-y-6">
-              {orders.map((o) => (
-                <article
-                  key={o.id}
-                  className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition"
-                  aria-label={`Pedido número ${o.id}`}
+            <>
+              <div className="space-y-6">
+                {orders.map((o) => (
+                  <article
+                    key={o.id}
+                    className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition"
+                    aria-label={`Pedido número ${o.id}`}
+                  >
+                    <header className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-sea">#{o.id}</h3>
+                      <time dateTime={new Date(o.createdAt).toISOString()} className="text-sm text-gray-500 italic">
+                        {new Date(o.createdAt).toLocaleString()}
+                      </time>
+                    </header>
+                    <p className="mb-2 text-gray-700 font-medium">
+                      Usuário: <span className="text-gray-900 font-semibold">{o.userId} - {o.userName}</span>
+                    </p>
+                    <p className="mb-2 text-gray-700 font-medium">
+                      Endereço: <span className="text-gray-900 font-semibold">{o.fullAddress}</span>
+                    </p>
+                    <p className="mb-2 text-gray-700 font-medium">
+                      Status: <span className="text-gray-900 font-semibold">{o.status}</span>
+                    </p>
+                    <h4 className="mb-2 font-semibold text-gray-800">Itens:</h4>
+                    <ul className="list-disc list-sea space-y-1 mb-4 text-gray-700 max-h-60 overflow-y-auto">
+                      {(o.products || []).map((it) => (
+                        <li key={`${o.id}-${it.productId}`}>
+                          {it.productId}-{it.name} x{it.quantity} - R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-right font-extrabold text-sea text-lg">
+                      Total: R$ {(o.total ?? 0).toFixed(2)}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-3 justify-end">
+                      {o.status != "canceled" && (
+                        <button
+                          onClick={() => handleCancel(o.id)}
+                          className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-semibold"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                      {o.status === "placed" && (
+                        <button
+                          onClick={() => handleShip(o.id)}
+                          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm font-semibold"
+                        >
+                          Enviar
+                        </button>
+                      )}
+                      {o.status === "shipped" && (
+                        <button
+                          onClick={() => handleDeliver(o.id)}
+                          className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition text-sm font-semibold"
+                        >
+                          Entregar
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <button
+                  onClick={() => loadOrders(page - 1)}
+                  disabled={page <= 1}
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page <= 1
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
+                    }`}
+                  aria-label="Página anterior"
                 >
-                  <header className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-sea">#{o.id}</h3>
-                    <time dateTime={new Date(o.createdAt).toISOString()} className="text-sm text-gray-500 italic">
-                      {new Date(o.createdAt).toLocaleString()}
-                    </time>
-                  </header>
-                  <p className="mb-2 text-gray-700 font-medium">
-                    Usuário: <span className="text-gray-900 font-semibold">{o.userId}</span>
-                  </p>
-                  <p className="mb-2 text-gray-700 font-medium">
-                    Status: <span className="text-gray-900 font-semibold">{o.status}</span>
-                  </p>
-                  <h4 className="mb-2 font-semibold text-gray-800">Itens:</h4>
-                  <ul className="list-disc list-sea space-y-1 mb-4 text-gray-700 max-h-60 overflow-y-auto">
-                    {(o.products || []).map((it) => (
-                      <li key={`${o.id}-${it.productId}`}>
-                        {it.name} x{it.quantity} - R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="text-right font-extrabold text-sea text-lg">
-                    Total: R$ {(o.total ?? 0).toFixed(2)}
-                  </p>
-                </article>
-              ))}
-            </div>
+                  Anterior
+                </button>
+                <span className="font-semibold text-gray-700 text-lg select-none">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() => loadOrders(page + 1)}
+                  disabled={page >= totalPages}
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page >= totalPages
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
+                    }`}
+                  aria-label="Próxima página"
+                >
+                  Próxima
+                </button>
+              </div>
+            </>
           )}
         </section>
       </div>
