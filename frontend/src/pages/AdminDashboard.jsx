@@ -296,7 +296,7 @@ export default function AdminDashboard() {
                     <ul className="list-disc list-sea space-y-1 mb-4 text-gray-700 max-h-60 overflow-y-auto">
                       {(o.products || []).map((it) => (
                         <li key={`${o.id}-${it.productId}`}>
-                          {it.name} x{it.quantity} - R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
+                          {it.productId}-{it.name} x{it.quantity} - R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
                         </li>
                       ))}
                     </ul>
