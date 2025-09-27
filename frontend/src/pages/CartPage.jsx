@@ -71,7 +71,7 @@ export default function CartPage() {
             <div className="flex gap-6 w-full md:w-auto justify-center">
               <button
                 onClick={() => nav("/")}
-                className="flex-1 md:flex-none px-8 py-4 border-2 border-sea rounded-3xl text-sea font-semibold hover:bg-sea transition"
+                className="flex-1 md:flex-none px-8 py-4 border-2 border-sea rounded-3xl text-sea font-semibold hover:text-white hover:bg-sea transition"
               >
                 Continuar comprando
               </button>

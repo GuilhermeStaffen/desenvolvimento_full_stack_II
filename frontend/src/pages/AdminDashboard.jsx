@@ -49,18 +49,18 @@ function ProductForm({ current, onSave, onCancel }) {
     });
   }
 
-
-
   return (
     <form onSubmit={submit} className="grid gap-5">
+      <label className="text-sm text-gray-700">Nome</label>
       <input
         name="name"
         placeholder="Nome"
         value={form.name}
         onChange={handleChange}
         required
-        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+      <label className="text-sm text-gray-700">Preço</label>
       <input
         name="price"
         type="number"
@@ -68,8 +68,9 @@ function ProductForm({ current, onSave, onCancel }) {
         value={form.price}
         onChange={handleChange}
         required
-        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+      <label className="text-sm text-gray-700">Quantidade</label>
       <input
         name="quantity"
         type="number"
@@ -77,24 +78,26 @@ function ProductForm({ current, onSave, onCancel }) {
         value={form.quantity}
         onChange={handleChange}
         required
-        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+      <label className="text-sm text-gray-700">Imagem (URL)</label>
       <input
         name="image"
         placeholder="URL imagem"
         value={form.image}
         onChange={handleChange}
-        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+      <label className="text-sm text-gray-700">Descrição</label>
       <textarea
         name="description"
         placeholder="Descrição"
         value={form.description}
         onChange={handleChange}
         rows={4}
-        className="border border-sea rounded-lg px-4 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="border border-sea rounded-lg px-4 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
-      <div className="flex gap-4">
+      <div className="flex gap-4 mt-3">
         <button
           type="submit"
           className="bg-sea text-white px-6 py-2 rounded-lg hover:bg-sea-400 transition font-semibold shadow"
@@ -117,15 +120,57 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [prodPage, setProdPage] = useState(1);
+  const [prodTotalPages, setProdTotalPages] = useState(1);
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderTotalPages, setOrderTotalPages] = useState(1);
 
-  async function loadProdutos() {
-    const res = await listProdutos({ page: 1, limit: 200 });
-    setProdutos(res.items || []);
+  async function loadProdutos(p = 1) {
+    try {
+      const res = await listProdutos({ page: p, limit: 6 });
+      const payload = res.data ?? res;
+      setProdutos(payload.items ?? []);
+      setProdPage(payload.page ?? p);
+      setProdTotalPages(payload.totalPages ?? 1);
+    } catch {
+      toast.error("Erro ao carregar produtos");
+    }
+  }
+
+  async function handleSave(prod) {
+    try {
+      const produtoPayload = {
+        name: prod.name,
+        description: prod.description,
+        price: Number(prod.price),
+        quantity: Number(prod.quantity),
+        image: prod.image,
+      };
+      if (prod.id) {
+        await updateProduto(prod.id, produtoPayload);
+        toast.success("Produto atualizado com sucesso!");
+      } else {
+        await createProduto(produtoPayload);
+        toast.success("Produto criado com sucesso!");
+      }
+      setSelected(null);
+      loadProdutos();
+    } catch {
+      toast.error("Erro ao salvar produto");
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!confirm("Excluir?")) return;
+    try {
+      await deleteProduto(id);
+      loadProdutos();
+    } catch {
+      toast.error("Erro ao excluir produto");
+    }
   }
 
   async function loadOrders(p = 1) {
@@ -137,8 +182,8 @@ export default function AdminDashboard() {
 
       setOrders(items);
 
-      setTotalPages(payload.totalPages ?? Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? 5)));
-      setPage(payload.page ?? p);
+      setOrderTotalPages(payload.totalPages ?? Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? 5)));
+      setOrderPage(payload.page ?? p);
     } catch (err) {
       console.error(err);
     } finally {
@@ -183,57 +228,25 @@ export default function AdminDashboard() {
     }
   }, [user]);
 
-  async function handleSave(prod) {
-    try {
-      const produtoPayload = {
-        name: prod.name,
-        description: prod.description,
-        price: Number(prod.price),
-        quantity: Number(prod.quantity),
-        image: prod.image,
-      };
-      if (prod.id) {
-        await updateProduto(prod.id, produtoPayload);
-        toast.success("Produto atualizado com sucesso!");
-      } else {
-        await createProduto(produtoPayload);
-        toast.success("Produto criado com sucesso!");
-      }
-      setSelected(null);
-      loadProdutos();
-    } catch {
-      toast.error("Erro ao salvar produto");
-    }
-  }
-
-  async function handleDelete(id) {
-    if (!confirm("Excluir?")) return;
-    try {
-      await deleteProduto(id);
-      loadProdutos();
-    } catch {
-      toast.error("Erro ao excluir produto");
-    }
-  }
-
   return (
     <ProtectedRoute adminOnly={true}>
       <div className="container mx-auto py-12 px-6 space-y-16">
         <h1 className="text-4xl font-bold text-center md:text-left">Painel Administrativo</h1>
 
+        {/* Produtos */}
         <div className="flex flex-col md:flex-row gap-12">
           <section className="md:flex-1 bg-white p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-6">{selected ? "Editar produto" : "Novo produto"}</h2>
             <ProductForm current={selected} onSave={handleSave} onCancel={() => setSelected(null)} />
           </section>
 
-          <section className="md:flex-2 bg-white p-8 rounded-xl shadow-lg overflow-x-auto max-h-[720px]">
+          <section className="md:flex-2 bg-white p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-6">Produtos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {produtos.map((p) => (
                 <div key={p.id} className="border border-gray-200 rounded-xl shadow-sm p-5 flex flex-col">
                   <img
-                    src={p.image || "/src/assets/placeholder.png"}
+                    src={p.images?.[0]?.url || p.image || "/src/images/placeholder.png"}
                     alt={p.name}
                     className="h-36 w-full object-cover rounded-lg mb-4 shadow-inner"
                   />
@@ -259,9 +272,33 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+
+            {/* Paginação de produtos */}
+            {prodTotalPages > 1 && (
+              <div className="flex justify-center items-center gap-6 mt-8">
+                <button
+                  onClick={() => loadProdutos(prodPage - 1)}
+                  disabled={prodPage <= 1}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+                <span>
+                  {prodPage} / {prodTotalPages}
+                </span>
+                <button
+                  onClick={() => loadProdutos(prodPage + 1)}
+                  disabled={prodPage >= prodTotalPages}
+                  className="px-4 py-2 border rounded disabled:opacity-50"
+                >
+                  Próxima
+                </button>
+              </div>
+            )}
           </section>
         </div>
 
+        {/* Pedidos */}
         <section className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold mb-6 text-center">Pedidos Recentes</h2>
           {loadingOrders ? (
@@ -279,32 +316,67 @@ export default function AdminDashboard() {
                   >
                     <header className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-sea">#{o.id}</h3>
-                      <time dateTime={new Date(o.createdAt).toISOString()} className="text-sm text-gray-500 italic">
+                      <time
+                        dateTime={new Date(o.createdAt).toISOString()}
+                        className="text-sm text-gray-500 italic"
+                      >
                         {new Date(o.createdAt).toLocaleString()}
                       </time>
                     </header>
                     <p className="mb-2 text-gray-700 font-medium">
-                      Usuário: <span className="text-gray-900 font-semibold">{o.userId} - {o.userName}</span>
+                      Usuário:{" "}
+                      <span className="text-gray-900 font-semibold">
+                        {o.userId} - {o.userName}
+                      </span>
                     </p>
                     <p className="mb-2 text-gray-700 font-medium">
-                      Endereço: <span className="text-gray-900 font-semibold">{o.fullAddress}</span>
+                      Endereço:{" "}
+                      <span className="text-gray-900 font-semibold">
+                        {o.fullAddress}
+                      </span>
                     </p>
                     <p className="mb-2 text-gray-700 font-medium">
-                      Status: <span className="text-gray-900 font-semibold">{o.status}</span>
+                      Status:{" "}
+                      <span className="text-gray-900 font-semibold">
+                        {o.status}
+                      </span>
                     </p>
                     <h4 className="mb-2 font-semibold text-gray-800">Itens:</h4>
-                    <ul className="list-disc list-sea space-y-1 mb-4 text-gray-700 max-h-60 overflow-y-auto">
+                    <div className="space-y-4 mb-4 max-h-60 overflow-y-auto">
                       {(o.products || []).map((it) => (
-                        <li key={`${o.id}-${it.productId}`}>
-                          {it.productId}-{it.name} x{it.quantity} - R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
-                        </li>
+                        <div
+                          key={`${o.id}-${it.productId}`}
+                          className="flex items-center gap-4 border border-gray-200 rounded-xl p-3 bg-gray-50 shadow-sm"
+                        >
+                          <img
+                            src={
+                              it.images?.[0]?.url ||
+                              it.image ||
+                              "/src/images/placeholder.png"
+                            }
+                            alt={it.name}
+                            className="w-16 h-16 object-cover rounded-lg shadow"
+                          />
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">
+                              {it.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Quantidade: {it.quantity}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Preço unitário: R${" "}
+                              {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                     <p className="text-right font-extrabold text-sea text-lg">
                       Total: R$ {(o.total ?? 0).toFixed(2)}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-3 justify-end">
-                      {o.status != "canceled" && (
+                      {o.status !== "canceled" && (
                         <button
                           onClick={() => handleCancel(o.id)}
                           className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-semibold"
@@ -315,7 +387,7 @@ export default function AdminDashboard() {
                       {o.status === "placed" && (
                         <button
                           onClick={() => handleShip(o.id)}
-                          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition text-sm font-semibold"
+                          className="px-4 py-2 rounded-lg bg-sea text-white hover:bg-sea transition text-sm font-semibold"
                         >
                           Enviar
                         </button>
@@ -334,26 +406,28 @@ export default function AdminDashboard() {
               </div>
               <div className="flex justify-center items-center gap-4 mt-8">
                 <button
-                  onClick={() => loadOrders(page - 1)}
-                  disabled={page <= 1}
-                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page <= 1
-                    ? "border-sea text-sea cursor-not-allowed opacity-50"
-                    : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
-                    }`}
+                  onClick={() => loadOrders(orderPage - 1)}
+                  disabled={orderPage <= 1}
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
+                    orderPage <= 1
+                      ? "border-sea text-sea cursor-not-allowed opacity-50"
+                      : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
+                  }`}
                   aria-label="Página anterior"
                 >
                   Anterior
                 </button>
                 <span className="font-semibold text-gray-700 text-lg select-none">
-                  {page} / {totalPages}
+                  {orderPage} / {orderTotalPages}
                 </span>
                 <button
-                  onClick={() => loadOrders(page + 1)}
-                  disabled={page >= totalPages}
-                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page >= totalPages
-                    ? "border-sea text-sea cursor-not-allowed opacity-50"
-                    : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
-                    }`}
+                  onClick={() => loadOrders(orderPage + 1)}
+                  disabled={orderPage >= orderTotalPages}
+                  className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
+                    orderPage >= orderTotalPages
+                      ? "border-sea text-sea cursor-not-allowed opacity-50"
+                      : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
+                  }`}
                   aria-label="Próxima página"
                 >
                   Próxima
