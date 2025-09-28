@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getUser, updateUser } from "../services/api";
+import toast from "react-hot-toast";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -74,10 +75,9 @@ export default function Profile() {
         ...form.address,
       });
       setUserData(res);
-      alert("Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
     } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar");
+      toast.error("Erro ao salvar");
     } finally {
       setSaving(false);
     }
