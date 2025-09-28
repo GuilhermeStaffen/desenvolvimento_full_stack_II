@@ -38,7 +38,6 @@ function normalizeProduct(p) {
 
 /* AUTH */
 export const login = (data) => client.post("/auth/login", data);
-export const register = (data) => client.post("/auth/register", data);
 
 /* USERS */
 export function listUsers(params = {}) {
@@ -91,7 +90,7 @@ export function deliverPedido(id) { return client.post(`/orders/${id}/delivered`
 
 export default {
   // auth
-  login, register,
+  login,
   // users
   listUsers, getUser, updateUser, createUser,
   // products
