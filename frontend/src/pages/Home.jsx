@@ -22,8 +22,8 @@ export default function Home() {
         name: name || undefined
       });
       setProdutos(items);
-      setPage(page);
-      setTotalPages(totalPages);
+      setPage(returnedPage);
+      setTotalPages(returnedTotalPages);
     } catch (err) {
       console.error("Erro ao carregar produtos:", err);
       setProdutos([]);
