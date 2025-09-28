@@ -21,34 +21,45 @@ export function AuthProvider({ children }) {
 
   async function login({ email, senha }) {
     try {
-      const res = await api.login({ email, password: senha });
-      const payload = res.data ?? {};
-      const token = payload.token ?? null;
-      const userObj = payload.user ?? payload;
+      let res;
+      try {
+        res = await api.login({ email, password: senha });
+      } catch {
+        res = await api.login({ email, senha });
+      }
 
-      if (!token) throw new Error("Token ausente no retorno do login");
+      const payload = res.data ?? res;
+      const token =
+        payload.token ??
+        payload.accessToken ??
+        payload.access_token ??
+        payload.tokenJwt ??
+        null;
 
-      localStorage.setItem("token", token);
+      const userObj = payload.user ?? payload.usuario ?? payload;
 
-      const normalizedUser = {
-        id: userObj.id,
-        name: userObj.name ?? "",
-        email: userObj.email ?? "",
-        userType: userObj.userType ?? "customer",
-        street: userObj.street ?? "",
-        number: userObj.number ?? "",
-        city: userObj.city ?? "",
-        state: userObj.state ?? "",
-        zipcode: userObj.zipcode ?? "",
-        country: userObj.country ?? ""
-      };
+      if (token) localStorage.setItem("token", token);
+
+      const normalizedUser = userObj
+        ? {
+            id: userObj.id,
+            name: userObj.name ?? "",
+            email: userObj.email ?? "",
+            userType: userObj.userType ?? userObj.role ?? "customer",
+            street: userObj.street ?? "",
+            number: userObj.number ?? "",
+            city: userObj.city ?? "",
+            state: userObj.state ?? "",
+            zipcode: userObj.zipcode ?? "",
+            country: userObj.country ?? "",
+          }
+        : null;
 
       setUser(normalizedUser);
-      toast.success("Login realizado com sucesso!");
+      toast.success("Login realizado");
       return normalizedUser;
     } catch (err) {
-      console.error(err);
-      toast.error("Falha no login. Verifique suas credenciais.");
+      toast.error("Falha no login");
       throw err;
     }
   }
@@ -60,9 +71,9 @@ export function AuthProvider({ children }) {
   }
 
   async function refreshUser() {
+    if (!user?.id) return;
     try {
-      const res = await api.me();
-      const u = res.data ?? res;
+      const u = await api.getUser(user.id);
       if (u) {
         const normalizedUser = {
           id: u.id,
@@ -74,13 +85,12 @@ export function AuthProvider({ children }) {
           city: u.city ?? "",
           state: u.state ?? "",
           zipcode: u.zipcode ?? "",
-          country: u.country ?? ""
+          country: u.country ?? "",
         };
         setUser(normalizedUser);
       }
-    } catch (err) {
-      console.error("Erro ao buscar usuário logado", err);
-      logout();
+    } catch {
+      // ignora erro
     }
   }
 

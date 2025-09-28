@@ -54,7 +54,7 @@ export default function ProductPage() {
   return (
     <div className="container mx-auto px-6 py-12 bg-white rounded-3xl shadow-xl max-w-6xl">
       <div className="flex flex-col md:flex-row gap-12">
-        <div className="relative w-full md:w-96 h-96">
+        <div className="relative w-full md:w-96 h-96 flex-shrink-0">
           <img
             src={images[currentIndex]}
             alt={produto.name}
@@ -81,20 +81,22 @@ export default function ProductPage() {
                 {images.map((_, i) => (
                   <span
                     key={i}
-                    className={`w-3 h-3 rounded-full ${i === currentIndex ? "bg-sea" : "bg-gray-300"
-                      }`}
+                    className={`w-3 h-3 rounded-full ${
+                      i === currentIndex ? "bg-sea" : "bg-gray-300"
+                    }`}
                   />
                 ))}
               </div>
             </>
           )}
         </div>
-        <div className="flex flex-col justify-between">
+
+        <div className="flex flex-col justify-between flex-1">
           <div>
-            <h2 className="text-4xl font-extrabold mb-6 text-gray-900 tracking-wide">
+            <h2 className="text-4xl font-extrabold mb-6 text-gray-900 tracking-wide break-words">
               {produto.name}
             </h2>
-            <p className="text-gray-700 mb-8 leading-relaxed text-lg">
+            <p className="text-gray-700 mb-8 leading-relaxed text-lg break-words">
               {produto.description}
             </p>
           </div>

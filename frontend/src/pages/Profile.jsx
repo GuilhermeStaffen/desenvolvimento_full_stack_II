@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getUser, updateUser } from "../services/api";
+import toast from "react-hot-toast";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ export default function Profile() {
       setLoading(true);
       try {
         const u = await getUser(user.id);
-        setUserData(u.data);
+        setUserData(u);
       } catch (err) {
         console.error(err);
       } finally {
@@ -42,13 +43,13 @@ export default function Profile() {
       name: userData.name ?? "",
       email: userData.email ?? "",
       phone: userData.phone ?? "",
-      address: userData.address ?? {
-        street: "",
-        number: "",
-        city: "",
-        state: "",
-        zipcode: "",
-        country: "",
+      address: {
+        street: userData.address.street ?? "",
+        number: userData.address.number ?? "",
+        city: userData.address.city ?? "",
+        state: userData.address.state ?? "",
+        zipcode: userData.address.zipcode ?? "",
+        country: userData.address.country ?? "",
       },
     });
   }, [userData]);
@@ -69,12 +70,14 @@ export default function Profile() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await updateUser(userData.id, form);
-      setUserData(res.data ?? res);
-      alert("Perfil atualizado com sucesso!");
+      const res = await updateUser(userData.id, {
+        ...form,
+        ...form.address,
+      });
+      setUserData(res);
+      toast.success("Perfil atualizado com sucesso!");
     } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar");
+      toast.error("Erro ao salvar");
     } finally {
       setSaving(false);
     }
@@ -106,7 +109,7 @@ export default function Profile() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div>
               <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
-                Name Completo
+                Nome Completo
               </label>
               <input
                 id="name"
@@ -115,7 +118,7 @@ export default function Profile() {
                 value={form.name}
                 onChange={handleChange}
                 required
-                placeholder="Name completo"
+                placeholder="Nome completo"
                 className="w-full rounded-xl border border-gray-300 px-5 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-400 transition shadow-sm"
               />
             </div>

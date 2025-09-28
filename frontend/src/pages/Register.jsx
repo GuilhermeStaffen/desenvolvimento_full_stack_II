@@ -56,7 +56,7 @@ export default function Register() {
         phone,
         address,
       };
-      await api.register(body);
+      await api.createUser(body);
       toast.success("Conta criada com sucesso!");
       nav("/login");
     } catch (err) {

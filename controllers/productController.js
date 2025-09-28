@@ -50,18 +50,28 @@ const productController = {
       const { id } = req.params;
       const { name, price, description, quantity, images } = req.body;
 
-      const product = await Product.findByPk(id);
+      const product = await Product.findByPk(id, {
+        include: { model: ProductImage, as: 'images' }
+      });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-
+      
       await product.update({
-        name: name || product.name,
-        price: price !== undefined ? price : product.price,
-        quantity: quantity !== undefined ? quantity : product.quantity,
-        description: description || product.description,
+        name: name ?? product.name,
+        price: price ?? product.price,
+        quantity: quantity ?? product.quantity,
+        description: description ?? product.description,
         updatedBy: req.user.id
       });
 
-      if (Array.isArray(images) && images.length > 0) {
+      if (Array.isArray(images)) {
+        const newUrls = images.map((img) => img.url);
+
+        for (const existing of product.images) {
+          if (!newUrls.includes(existing.url)) {
+            await existing.destroy();
+          }
+        }
+
         for (const img of images) {
           const exists = await ProductImage.findOne({
             where: { url: img.url, productId: product.id }
@@ -79,6 +89,7 @@ const productController = {
 
       res.json(productWithImages);
     } catch (error) {
+      console.error(error);
       res.status(500).json({ error: error.message });
     }
   },

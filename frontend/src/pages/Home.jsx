@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
@@ -10,27 +11,27 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
-  const { items, addToCart } = useCart();
+  const { addToCart } = useCart();
 
-  async function load(p = 1, query = "") {
+  async function load(p = 1, name = "") {
     setLoading(true);
     try {
-      const { items, page, totalPages } = await api.listProdutos({
+      const { items, page: returnedPage, totalPages: returnedTotalPages } = await api.listProdutos({
         page: p,
         limit: 9,
-        q: query
+        name: name || undefined
       });
       setProdutos(items);
-      setPage(page);
-      setTotalPages(totalPages);
+      setPage(returnedPage);
+      setTotalPages(returnedTotalPages);
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao carregar produtos:", err);
       setProdutos([]);
     } finally {
       setLoading(false);
     }
   }
-  
+
   useEffect(() => {
     load(1, "");
   }, []);
@@ -40,9 +41,7 @@ export default function Home() {
       <Hero />
       <div className="container mx-auto px-6 py-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
-          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight">
-            Produtos
-          </h2>
+          <h2 className="text-3xl font-semibold text-gray-900 tracking-tight">Produtos</h2>
 
           <form
             onSubmit={(e) => {
@@ -70,9 +69,7 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="text-center text-gray-600 py-12 text-lg font-medium select-none">
-            Carregando...
-          </div>
+          <div className="text-center text-gray-600 py-12 text-lg font-medium select-none">Carregando...</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {produtos.map((p) => (
@@ -85,26 +82,16 @@ export default function Home() {
           <button
             onClick={() => load(page - 1, q)}
             disabled={page <= 1}
-            className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
-              page <= 1
-                ? "border-sea text-sea cursor-not-allowed opacity-50"
-                : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
-            }`}
+            className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page <= 1 ? "border-sea text-sea cursor-not-allowed opacity-50" : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"}`}
             aria-label="Página anterior"
           >
             Anterior
           </button>
-          <span className="font-semibold text-gray-700 text-lg select-none">
-            {page} / {totalPages}
-          </span>
+          <span className="font-semibold text-gray-700 text-lg select-none">{page} / {totalPages}</span>
           <button
             onClick={() => load(page + 1, q)}
             disabled={page >= totalPages}
-            className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
-              page >= totalPages
-                ? "border-sea text-sea cursor-not-allowed opacity-50"
-                : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
-            }`}
+            className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${page >= totalPages ? "border-sea text-sea cursor-not-allowed opacity-50" : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"}`}
             aria-label="Próxima página"
           >
             Próxima

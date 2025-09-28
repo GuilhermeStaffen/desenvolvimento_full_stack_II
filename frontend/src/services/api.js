@@ -30,52 +30,47 @@ function normalizeProduct(p) {
     name: p.name ?? "",
     description: p.description ?? "",
     price: Number(p.price ?? 0),
-    quantity: p.quantity ?? 0,
+    quantity: Number(p.quantity ?? 0),
     images: p.images ?? null,
     raw: p
   };
 }
 
-// AUTH
-export function login(body) { // body: { email, password }
-  return client.post("/auth/login", body);
-}
-export function me() { return client.get("/auth/me"); }
-export function register(body) { return client.post("/users", body); }
+/* AUTH */
+export const login = (data) => client.post("/auth/login", data);
 
-// USERS
-export function listUsers() { return client.get("/users"); }
-export function getUser(id) { return client.get(`/users/${id}`); }
-export function updateUser(id, body) { return client.put(`/users/${id}`, body); }
+/* USERS */
+export function listUsers(params = {}) {
+  return client.get("/users", { params });
+}
+export const getUser = (id) =>
+  client.get(`/users/${id}`).then((r) => r.data);
+
+export const updateUser = (id, data) =>
+  client.put(`/users/${id}`, data).then((r) => r.data);
+
+export function createUser(body) {
+  return client.post("/users", body);
+}
 
 // PRODUCTS
-export async function listProdutos(params) {
-  const parametros = params['q'];
-  const res = await client.get("/products?name="+parametros);
+export async function listProdutos(params = {}) {
+  const res = await client.get("/products", { params });
   const payload = res.data ?? {};
-  const rawItems = Array.isArray(payload) ? payload : (payload.items ?? payload.rows ?? payload.data ?? []);
+  const rawItems = payload.items ?? payload.rows ?? payload.data ?? [];
   const items = rawItems.map(normalizeProduct);
-  return {
-    items: payload.items ?? payload.rows ?? [],
-    page: payload.page ?? payload.currentPage ?? 1,
-    limit: payload.limit ?? payload.pageSize ?? items.length,
-    total: payload.total ?? payload.count ?? items.length,
-    totalItems: payload.total ?? payload.count ?? items.length,
-    totalPages: payload.totalPages ?? Math.max(1, Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? items.length)))
-  };
+  const page = Number(payload.page ?? 1);
+  const totalPages = Number(payload.totalPages ?? Math.max(1, Math.ceil((payload.total ?? rawItems.length) / (params.limit ?? payload.limit ?? rawItems.length))));
+  const totalItems = Number(payload.total ?? payload.totalItems ?? payload.count ?? rawItems.length);
+  return { items, page, totalPages, totalItems, raw: payload };
 }
 
 export async function getProduto(id) {
   const res = await client.get(`/products/${id}`);
   return normalizeProduct(res.data);
 }
-export function createProduto(body) { 
-  return client.post('/products', body, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-}
+
+export function createProduto(body) { return client.post("/products", body); }
 export function updateProduto(id, body) { return client.put(`/products/${id}`, body); }
 export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 
@@ -93,12 +88,16 @@ export function cancelPedido(id) { return client.post(`/orders/${id}/canceled`);
 export function shipPedido(id) { return client.post(`/orders/${id}/shipped`); }
 export function deliverPedido(id) { return client.post(`/orders/${id}/delivered`); }
 
-// default export to keep compatibility with older imports
 export default {
-  login, me, register,
-  listUsers, updateUser,
+  // auth
+  login,
+  // users
+  listUsers, getUser, updateUser, createUser,
+  // products
   listProdutos, getProduto, createProduto, updateProduto, deleteProduto,
-  getCart, postCart, deleteCartItem,
-  createPedido, listPedidos, listMyOrders,
+  // cart
+  getCart, postCart, putCart, deleteCartItem,
+  // orders
+  createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido,
   rawClient: client
 };

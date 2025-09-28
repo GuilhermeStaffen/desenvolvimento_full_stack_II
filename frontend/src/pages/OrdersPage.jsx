@@ -7,77 +7,154 @@ export default function OrdersPage() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderTotalPages, setOrderTotalPages] = useState(1);
   const nav = useNavigate();
+
+  async function loadOrders(p = 1) {
+    setLoading(true);
+    try {
+      const res = await listMyOrders({ page: p, limit: 5 });
+      const payload = res.data ?? res;
+      setOrders(payload.items ?? []);
+      setOrderPage(payload.page ?? 1);
+      setOrderTotalPages(payload.totalPages ?? 1);
+    } catch (err) {
+      console.error("Erro ao carregar pedidos:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) {
       nav("/login");
       return;
     }
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await listMyOrders({ page: 1, limit: 20 });
-        const payload = res.data ?? res;
-        const items = payload.items ?? payload.rows ?? payload.data ?? [];
-        setOrders(items);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    loadOrders(1);
   }, [user]);
 
   return (
-    <div className="container mx-auto max-w-5xl px-8 py-16 bg-white rounded-3xl shadow-lg">
-      <h2 className="text-4xl font-extrabold mb-12 text-gray-900 text-center tracking-wide">
-        Meus Pedidos
-      </h2>
+    <div className="container mx-auto max-w-5xl px-8 py-16">
+      <section className="bg-white p-8 rounded-xl shadow-lg">
+        <h2 className="text-3xl font-extrabold mb-12 text-gray-900 text-center tracking-wide">
+          Meus Pedidos
+        </h2>
 
-      {loading ? (
-        <div className="text-center text-gray-500 py-12 text-xl font-medium" role="status" aria-live="polite">
-          Carregando...
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="text-center text-gray-400 py-12 text-xl font-medium italic">
-          Nenhum pedido encontrado
-        </div>
-      ) : (
-        <div className="space-y-10">
-          {orders.map((o) => (
-            <div
-              key={o.id}
-              className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-2xl p-8 shadow-md hover:shadow-xl transition"
-              aria-label={`Pedido número ${o.id}`}
-            >
-              <div className="flex justify-between items-center mb-6">
-                <div className="text-xl font-semibold text-sea">
-                  Pedido #{o.id}
-                </div>
-                <time
-                  dateTime={new Date(o.createdAt).toISOString()}
-                  className="text-sm text-gray-500 italic"
+        {loading ? (
+          <p className="text-center text-gray-500 py-12 text-lg select-none">
+            Carregando...
+          </p>
+        ) : orders.length === 0 ? (
+          <p className="text-center text-gray-400 py-12 italic select-none">
+            Nenhum pedido encontrado
+          </p>
+        ) : (
+          <>
+            <div className="space-y-6">
+              {orders.map((o) => (
+                <article
+                  key={o.id}
+                  className="bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition"
+                  aria-label={`Pedido número ${o.id}`}
                 >
-                  {new Date(o.createdAt).toLocaleString()}
-                </time>
-              </div>
-              <ul className="divide-y divide-gray-300 mb-6">
-                {(o.items || []).map((it) => (
-                  <li key={`${o.id}-${it.productId}`} className="py-3 flex justify-between text-gray-700 font-medium">
-                    <span>{it.name} <span className="text-gray-500">x{it.quantity}</span></span>
-                    <span>R$ {(it.unitPrice ?? it.price ?? 0).toFixed(2)}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="text-right font-extrabold text-2xl text-sea">
-                Total: R$ {(o.total ?? o.totalPrice ?? 0).toFixed(2)}
-              </div>
+                  <header className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-sea">#{o.id}</h3>
+                    <time
+                      dateTime={new Date(o.createdAt).toISOString()}
+                      className="text-sm text-gray-500 italic"
+                    >
+                      {new Date(o.createdAt).toLocaleString()}
+                    </time>
+                  </header>
+
+                  <p className="mb-2 text-gray-700 font-medium">
+                    Endereço:{" "}
+                    <span className="text-gray-900 font-semibold">
+                      {o.fullAddress}
+                    </span>
+                  </p>
+
+                  <p className="mb-2 text-gray-700 font-medium">
+                    Status:{" "}
+                    <span className="text-gray-900 font-semibold">
+                      {o.status}
+                    </span>
+                  </p>
+
+                  <h4 className="mb-2 font-semibold text-gray-800">Itens:</h4>
+                  <div className="space-y-4 mb-4 max-h-60 overflow-y-auto">
+                    {(o.products || []).map((it) => (
+                      <div
+                        key={`${o.id}-${it.productId}`}
+                        className="flex items-center gap-4 border border-gray-200 rounded-xl p-3 bg-gray-50 shadow-sm"
+                      >
+                        <img
+                          src={
+                            it.images?.[0]?.url ||
+                            it.image ||
+                            "/src/images/placeholder.png"
+                          }
+                          alt={it.name}
+                          className="w-16 h-16 object-cover rounded-lg shadow"
+                        />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">
+                            {it.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Quantidade: {it.quantity}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Preço unitário: R${" "}
+                            {(it.unitPrice ?? it.price ?? 0).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-right font-extrabold text-sea text-lg">
+                    Total: R$ {(o.total ?? o.totalPrice ?? 0).toFixed(2)}
+                  </p>
+                </article>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* Paginação */}
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <button
+                onClick={() => loadOrders(orderPage - 1)}
+                disabled={orderPage <= 1}
+                className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
+                  orderPage <= 1
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-sea hover:bg-sea hover:text-white shadow-md"
+                }`}
+                aria-label="Página anterior"
+              >
+                Anterior
+              </button>
+              <span className="font-semibold text-gray-700 text-lg select-none">
+                {orderPage} / {orderTotalPages}
+              </span>
+              <button
+                onClick={() => loadOrders(orderPage + 1)}
+                disabled={orderPage >= orderTotalPages}
+                className={`px-6 py-3 rounded-lg border-2 font-semibold transition ${
+                  orderPage >= orderTotalPages
+                    ? "border-sea text-sea cursor-not-allowed opacity-50"
+                    : "border-sea text-white bg-sea hover:bg-sea-hover shadow-md"
+                }`}
+                aria-label="Próxima página"
+              >
+                Próxima
+              </button>
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }
