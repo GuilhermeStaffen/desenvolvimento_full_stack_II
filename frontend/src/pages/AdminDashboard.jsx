@@ -1,42 +1,67 @@
 import React, { useEffect, useState } from "react";
 import {
-  listProdutos, createProduto, updateProduto, deleteProduto, listPedidos, cancelPedido, shipPedido, deliverPedido
+  listProdutos,
+  createProduto,
+  updateProduto,
+  deleteProduto,
+  listPedidos,
+  cancelPedido,
+  shipPedido,
+  deliverPedido,
 } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
 
+/* ------------------ FORM DE PRODUTO ------------------ */
 function ProductForm({ current, onSave, onCancel }) {
   const [form, setForm] = useState({
     name: "",
     price: 0,
     quantity: 0,
     description: "",
-    image: "",
+    images: [""], // ✅ começa com uma entrada
   });
 
   useEffect(() => {
-    if (current)
+    if (current) {
       setForm({
         name: current.name,
         price: current.price,
         quantity: current.quantity,
         description: current.description,
-        image: current.image,
+        images:
+          current.images?.map((img) => img.url) || (current.image ? [current.image] : [""]),
       });
-    else
+    } else {
       setForm({
         name: "",
         price: 0,
         quantity: 0,
         description: "",
-        image: "",
+        images: [""],
       });
+    }
   }, [current]);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleImageChange(index, value) {
+    const newImages = [...form.images];
+    newImages[index] = value;
+    setForm((prev) => ({ ...prev, images: newImages }));
+  }
+
+  function addImageField() {
+    setForm((prev) => ({ ...prev, images: [...prev.images, ""] }));
+  }
+
+  function removeImageField(index) {
+    const newImages = form.images.filter((_, i) => i !== index);
+    setForm((prev) => ({ ...prev, images: newImages.length ? newImages : [""] }));
   }
 
   function submit(e) {
@@ -46,6 +71,7 @@ function ProductForm({ current, onSave, onCancel }) {
       ...form,
       price: Number(form.price),
       quantity: Number(form.quantity),
+      images: form.images.filter((url) => url.trim() !== "").map((url) => ({ url })),
     });
   }
 
@@ -60,6 +86,7 @@ function ProductForm({ current, onSave, onCancel }) {
         required
         className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+
       <label className="text-sm text-gray-700">Preço</label>
       <input
         name="price"
@@ -70,6 +97,7 @@ function ProductForm({ current, onSave, onCancel }) {
         required
         className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+
       <label className="text-sm text-gray-700">Quantidade</label>
       <input
         name="quantity"
@@ -80,14 +108,36 @@ function ProductForm({ current, onSave, onCancel }) {
         required
         className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
-      <label className="text-sm text-gray-700">Imagem (URL)</label>
-      <input
-        name="image"
-        placeholder="URL imagem"
-        value={form.image}
-        onChange={handleChange}
-        className="border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
-      />
+
+      <label className="text-sm text-gray-700">Imagens (URLs)</label>
+      <div className="space-y-3">
+        {form.images.map((url, idx) => (
+          <div key={idx} className="flex gap-3 items-center">
+            <input
+              type="text"
+              placeholder="URL da imagem"
+              value={url}
+              onChange={(e) => handleImageChange(idx, e.target.value)}
+              className="flex-1 border border-sea rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sea transition"
+            />
+            <button
+              type="button"
+              onClick={() => removeImageField(idx)}
+              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Remover
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addImageField}
+          className="px-4 py-2 bg-sea text-white rounded-lg hover:bg-sea-400 transition"
+        >
+          + Adicionar Imagem
+        </button>
+      </div>
+
       <label className="text-sm text-gray-700">Descrição</label>
       <textarea
         name="description"
@@ -97,6 +147,7 @@ function ProductForm({ current, onSave, onCancel }) {
         rows={4}
         className="border border-sea rounded-lg px-4 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-sea transition"
       />
+
       <div className="flex gap-4 mt-3">
         <button
           type="submit"
@@ -116,6 +167,7 @@ function ProductForm({ current, onSave, onCancel }) {
   );
 }
 
+/* ------------------ DASHBOARD ------------------ */
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [produtos, setProdutos] = useState([]);
@@ -147,8 +199,9 @@ export default function AdminDashboard() {
         description: prod.description,
         price: Number(prod.price),
         quantity: Number(prod.quantity),
-        image: prod.image,
+        images: prod.images, // ✅ já vem no formato [{ url }]
       };
+
       if (prod.id) {
         await updateProduto(prod.id, produtoPayload);
         toast.success("Produto atualizado com sucesso!");
@@ -181,8 +234,10 @@ export default function AdminDashboard() {
       const items = payload.items ?? payload.rows ?? payload.data ?? [];
 
       setOrders(items);
-
-      setOrderTotalPages(payload.totalPages ?? Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? 5)));
+      setOrderTotalPages(
+        payload.totalPages ??
+          Math.ceil((payload.totalItems ?? items.length) / (payload.limit ?? 5))
+      );
       setOrderPage(payload.page ?? p);
     } catch (err) {
       console.error(err);
@@ -231,29 +286,46 @@ export default function AdminDashboard() {
   return (
     <ProtectedRoute adminOnly={true}>
       <div className="container mx-auto py-12 px-6 space-y-16">
-        <h1 className="text-4xl font-bold text-center md:text-left">Painel Administrativo</h1>
+        <h1 className="text-4xl font-bold text-center md:text-left">
+          Painel Administrativo
+        </h1>
 
         {/* Produtos */}
         <div className="flex flex-col md:flex-row gap-12">
           <section className="md:flex-1 bg-white p-8 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-semibold mb-6">{selected ? "Editar produto" : "Novo produto"}</h2>
-            <ProductForm current={selected} onSave={handleSave} onCancel={() => setSelected(null)} />
+            <h2 className="text-2xl font-semibold mb-6">
+              {selected ? "Editar produto" : "Novo produto"}
+            </h2>
+            <ProductForm
+              current={selected}
+              onSave={handleSave}
+              onCancel={() => setSelected(null)}
+            />
           </section>
 
           <section className="md:flex-2 bg-white p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-6">Produtos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {produtos.map((p) => (
-                <div key={p.id} className="border border-gray-200 rounded-xl shadow-sm p-5 flex flex-col">
+                <div
+                  key={p.id}
+                  className="border border-gray-200 rounded-xl shadow-sm p-5 flex flex-col"
+                >
                   <img
-                    src={p.images?.[0]?.url || p.image || "/src/images/placeholder.png"}
+                    src={
+                      p.images?.[0]?.url || p.image || "/src/images/placeholder.png"
+                    }
                     alt={p.name}
                     className="h-36 w-full object-cover rounded-lg mb-4 shadow-inner"
                   />
                   <div className="flex-grow">
                     <h3 className="font-bold text-lg text-gray-900">{p.name}</h3>
-                    <p className="text-gray-600 text-sm mt-1">R$ {Number(p.price).toFixed(2)}</p>
-                    <p className="text-gray-600 text-sm mt-1">Estoque: {p.quantity}</p>
+                    <p className="text-gray-600 text-sm mt-1">
+                      R$ {Number(p.price).toFixed(2)}
+                    </p>
+                    <p className="text-gray-600 text-sm mt-1">
+                      Estoque: {p.quantity}
+                    </p>
                   </div>
                   <div className="mt-6 flex gap-4">
                     <button
@@ -297,7 +369,6 @@ export default function AdminDashboard() {
             )}
           </section>
         </div>
-
         {/* Pedidos */}
         <section className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold mb-6 text-center">Pedidos Recentes</h2>

@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 
 export default function Checkout() {
   const { items, total, clearCart } = useCart();
+  const { user, loading } = useAuth();
   const nav = useNavigate();
 
   async function handleConfirmarPedido() {
     try {
       const payload = {
-        products: items.map((i) => ({
+        items: items.map((i) => ({
           productId: i.id,
           quantity: Number(i.quantidade ?? i.quantity ?? 1),
         })),
@@ -20,11 +21,11 @@ export default function Checkout() {
 
       await api.createPedido(payload);
       clearCart();
-      alert("Pedido realizado com sucesso!");
-      nav("/orders");
+      toast.success("Pedido realizado com sucesso!");
+      nav("/meus-pedidos");
     } catch (err) {
       console.error("Erro ao confirmar pedido:", err);
-      alert(err.response?.data?.message || "Erro ao confirmar pedido");
+      toast.error(err.response?.data?.message || "Erro ao confirmar pedido");
     }
   }
 
