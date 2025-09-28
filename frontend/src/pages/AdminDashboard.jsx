@@ -13,14 +13,13 @@ import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
 
-/* ------------------ FORM DE PRODUTO ------------------ */
 function ProductForm({ current, onSave, onCancel }) {
   const [form, setForm] = useState({
     name: "",
     price: 0,
     quantity: 0,
     description: "",
-    images: [""], // ✅ começa com uma entrada
+    images: [""],
   });
 
   useEffect(() => {
@@ -199,7 +198,7 @@ export default function AdminDashboard() {
         description: prod.description,
         price: Number(prod.price),
         quantity: Number(prod.quantity),
-        images: prod.images, // ✅ já vem no formato [{ url }]
+        images: prod.images,
       };
 
       if (prod.id) {
