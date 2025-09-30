@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const { login } = useAuth();
+  const { syncFromBackend } = useCart();
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -16,6 +18,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login({ email, senha });
+      await syncFromBackend();
       nav("/");
     } catch (err) {
       setError("Credenciais inválidas");

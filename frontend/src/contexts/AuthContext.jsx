@@ -67,6 +67,7 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("cart");
     setUser(null);
   }
 
