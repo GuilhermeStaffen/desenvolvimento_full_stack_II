@@ -53,12 +53,23 @@ export default function Navbar() {
                 Olá, {user.name}
               </Link>
               {user.userType === "admin" && (
+
                 <Link
                   to="/admin/dashboard"
                   className="hover:text-sea font-medium transition duration-150"
                   aria-label="Página Admin"
                 >
                   Admin
+                </Link>
+
+              )}
+              {user.userType === "admin" && (
+                <Link
+                  to="/admin/cadastros"
+                  className="hover:text-sea font-medium transition duration-150"
+                  aria-label="Página de Cadastros"
+                >
+                  Cadastros
                 </Link>
               )}
               <button
