@@ -8,6 +8,11 @@ import {
   cancelPedido,
   shipPedido,
   deliverPedido,
+  getSupplier,
+  listSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier
 } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
@@ -22,6 +27,11 @@ export default function AdminDashboard() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productPage, setProductPage] = useState(1);
   const [productTotalPages, setProductTotalPages] = useState(1);
+
+  const [suppliers, setSuppliers] = useState([]);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [supplierPage, setSupplierPage] = useState(1);
+  const [supplierTotalPages, setSupplierTotalPages] = useState(1);
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -124,9 +134,59 @@ export default function AdminDashboard() {
     }
   }
 
+  async function loadSuppliers(p = 1) {
+  try {
+    const res = await listSuppliers({ page: p, limit: 6 });
+    const payload = res.data ?? res;
+    setSuppliers(payload.items ?? []);
+    setSupplierPage(payload.page ?? p);
+    setSupplierTotalPages(payload.totalPages ?? 1);
+  } catch (err) {
+    console.error(err);
+    toast.error("Erro ao carregar fornecedores");
+  }
+}
+
+  async function handleSaveSupplier(supplier) {
+    try {
+      const payload = {
+        name: supplier.name,
+        email: supplier.email,
+        cnpj: supplier.cnpj,
+        phone: supplier.phone,
+        website: supplier.website,
+      };
+
+      if (supplier.id) {
+        await updateSupplier(supplier.id, payload);
+        toast.success("Fornecedor atualizado com sucesso!");
+      } else {
+        await createSupplier(payload);
+        toast.success("Fornecedor criado com sucesso!");
+      }
+      setSelectedSupplier(null);
+      loadSuppliers();
+    } catch {
+      toast.error("Erro ao salvar fornecedor");
+    }
+  }
+
+  async function handleDeleteSupplier(id) {
+    if (!confirm("Excluir fornecedor?")) return;
+    try {
+      await deleteSupplier(id);
+      loadSuppliers();
+    } catch {
+      toast.error("Erro ao excluir fornecedor");
+    }
+  }
+
+
+
   useEffect(() => {
     if (user?.userType === "admin") {
       loadProducts();
+      loadSuppliers();
       loadOrders();
     }
   }, [user]);
@@ -177,6 +237,49 @@ export default function AdminDashboard() {
               totalPages={productTotalPages}
               onPrevPage={() => loadProducts(productPage - 1)}
               onNextPage={() => loadProducts(productPage + 1)}
+            />
+          </section>
+        </div>
+
+
+        <div className="flex flex-col md:flex-row gap-12">
+          <section className=" md:w-1/2 bg-white p-8 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-semibold mb-6">
+              {selectedSupplier ? "Editar fornecedor" : "Novo fornecedor"}
+            </h2>
+            <CustomForm
+              current={selectedSupplier}
+              onSave={handleSaveSupplier}
+              onCancel={() => setSelectedSupplier(null)}
+              fields={[
+                { name: "name", type: "text", label: "Nome" },
+                { name: "email", type: "text", label: "Email" },
+                { name: "cnpj", type: "text", label: "CNPJ" },
+                { name: "phone", type: "text", label: "Telefone" },
+                { name: "website", type: "text", label: "Website" },
+              ]}
+            />
+          </section>
+
+          <section className="md:flex-2 rounded-xl shadow-lg flex flex-row flex-wrap flex-grow">
+            <CustomListGrid
+              title="Fornecedores"
+              items={suppliers.map((s) => ({
+                id: s.id,
+                itemTitle: s.name,
+                text1: s.email,
+                text2: s.phone,
+              }))}
+              rawItems={suppliers}
+              onEdit={(id) => {
+                const supplier = suppliers.find((s) => s.id === id);
+                setSelectedSupplier(supplier);
+              }}
+              onDelete={(id) => handleDeleteSupplier(id)}
+              page={supplierPage}
+              totalPages={supplierTotalPages}
+              onPrevPage={() => loadSuppliers(supplierPage - 1)}
+              onNextPage={() => loadSuppliers(supplierPage + 1)}
             />
           </section>
         </div>

@@ -36,6 +36,19 @@ function normalizeProduct(p) {
   };
 }
 
+function normalizeSupplier(s) {
+  if (!s) return null;
+  return {
+    id: s.id,
+    name: s.name ?? "",
+    email: s.email ?? "",
+    phone: s.phone ?? "",
+    website: s.website ?? "",
+    cnpj: s.cnpj ?? "",
+    raw: s
+  };
+}
+
 /* AUTH */
 export const login = (data) => client.post("/auth/login", data);
 
@@ -74,9 +87,28 @@ export function createProduto(body) { return client.post("/products", body); }
 export function updateProduto(id, body) { return client.put(`/products/${id}`, body); }
 export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 
+export async function listSuppliers(params = {}) {
+  const res = await client.get("/suppliers", { params });
+  const payload = res.data ?? {};
+  const rawItems = payload.items ?? payload.rows ?? payload.data ?? [];
+  const items = rawItems.map(normalizeSupplier);
+  const page = Number(payload.page ?? 1);
+  const totalPages = Number(payload.totalPages ?? Math.max(1, Math.ceil((payload.total ?? rawItems.length) / (params.limit ?? payload.limit ?? rawItems.length))));
+  const totalItems = Number(payload.total ?? payload.totalItems ?? payload.count ?? rawItems.length);
+  return { items, page, totalPages, totalItems, raw: payload };
+}
+
+export async function getSupplier(id) {
+  const res = await client.get(`/suppliers/${id}`);
+  return normalizeSupplier(res.data);
+}
+export function createSupplier(body) { return client.post("/suppliers", body); }
+export function updateSupplier(id, body) { return client.put(`/suppliers/${id}`, body); }
+export function deleteSupplier(id) { return client.delete(`/suppliers/${id}`); }
+
 // CART
 export function getCart() { return client.get("/cart"); }
-export function postCart(productId, quantity=1) { return client.post("/cart", { productId, quantity }); }
+export function postCart(productId, quantity = 1) { return client.post("/cart", { productId, quantity }); }
 export function putCart(productId, quantity) { return client.put(`/cart/${productId}`, { quantity }); }
 export function deleteCartItem(productId) { return client.delete(`/cart/${productId}`); }
 
@@ -95,6 +127,8 @@ export default {
   listUsers, getUser, updateUser, createUser,
   // products
   listProdutos, getProduto, createProduto, updateProduto, deleteProduto,
+  // suppliers
+  getSupplier, createSupplier, updateSupplier, deleteSupplier, listSuppliers,
   // cart
   getCart, postCart, putCart, deleteCartItem,
   // orders

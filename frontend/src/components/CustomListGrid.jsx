@@ -11,11 +11,11 @@ export default function CustomListGrid({
   onNextPage,
 }) {
   return (
-    <section className="bg-white p-8 rounded-xl shadow-lg">
+    <section className="bg-white p-8 rounded-xl shadow-lg h-full w-full">
       {title && <h2 className="text-2xl font-semibold mb-6">{title}</h2>}
 
       {/* Lista de Itens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 ">
         {items.map((item) => (
           <div
             key={item.id}
@@ -32,12 +32,8 @@ export default function CustomListGrid({
               <h3 className="font-bold text-lg text-gray-900">
                 {item.itemTitle}
               </h3>
-              {item.text1 && (
-                <p className="text-gray-600 text-sm mt-1">{item.text1}</p>
-              )}
-              {item.text2 && (
-                <p className="text-gray-600 text-sm mt-1">{item.text2}</p>
-              )}
+              <p className="text-gray-600 text-sm mt-1 truncate">{item.text1 ?? "—"}</p>
+              <p className="text-gray-600 text-sm mt-1 truncate">{item.text2 ?? "—"}</p>
             </div>
 
             {(onEdit || onDelete) && (
