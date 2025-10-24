@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns=frontend",
+    "test:all": "concurrently \"npm test\" \"npm run test:front\"",
+    "test:front": "npm test --prefix frontend",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "dev:all": "concurrently \"npm run start\" \"npm run front\"",
