@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import CustomForm from "../components/CustomForm";
 import CustomListGrid from "../components/CustomListGrid";
 
-export default function AdminDashboard() {
+export default function ManagementSection() {
   const { user } = useAuth();
 
   const [products, setProducts] = useState([]);
