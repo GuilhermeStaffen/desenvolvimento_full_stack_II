@@ -6,6 +6,17 @@ const Order = require('./Order');
 const OrderItem = require('./OrderItem');
 const ProductImage = require('./ProductImage');
 
+Order.belongsTo(User);
+User.hasMany(Order);
+
+Order.hasMany(OrderItem, { foreignKey: "orderId" });
+OrderItem.belongsTo(Order, { foreignKey: "orderId" });
+
+Product.hasMany(OrderItem, { foreignKey: "productId" });
+OrderItem.belongsTo(Product, { foreignKey: "productId" });
+
+Product.hasMany(ProductImage, { foreignKey: "productId" });
+ProductImage.belongsTo(Product, { foreignKey: "productId" });
 
 async function syncDatabase() {
   try {

@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
+import { getAdminDashboard } from '../api/dashboardApi';
 
 function ProductForm({ current, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -177,7 +178,10 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orderPage, setOrderPage] = useState(1);
-  const [orderTotalPages, setOrderTotalPages] = useState(1);
+  const [orderTotalPages, setOrderTotalPages] = useState(1); 
+
+  const [dashboard, setDashboard] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
 
   async function loadProdutos(p = 1) {
     try {
@@ -279,6 +283,11 @@ export default function AdminDashboard() {
     if (user?.userType === "admin") {
       loadProdutos();
       loadOrders();
+
+      getAdminDashboard()
+      .then((data) => setDashboard(data))
+      .catch((err) => console.error("Erro ao carregar dashboard:", err))
+      .finally(() => setLoadingDashboard(false));
     }
   }, [user]);
 
@@ -288,6 +297,77 @@ export default function AdminDashboard() {
         <h1 className="text-4xl font-bold text-center md:text-left">
           Painel Administrativo
         </h1>
+        
+        {/* Resumo do Mês */}
+        <section className="bg-white p-8 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-semibold mb-6">Resumo do mês</h2>
+          {loadingDashboard ? (
+            <p className="text-center text-gray-500">Carregando dados...</p>
+          ) : (
+            dashboard ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                {/* Total de Vendas e Número de Vendas */}
+                <div className="p-6 rounded-xl shadow text-center">
+                  <h3 className="text-xl font-semibold text-sea mb-2">Total de vendas do mês</h3>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {dashboard.summaryResult.totalVendas?.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </p>
+                  <p className="text-sm text-gray-700 mt-1">
+                    ({dashboard.summaryResult.numeroVendas} venda(s) realizada(s))
+                  </p>
+                </div>
+
+                {/* Produto mais vendido */}
+                <div className="p-6 rounded-xl shadow text-center">
+                  <h3 className="text-xl font-semibold text-sea mb-2">Produto mais vendido</h3>
+                  {dashboard.produtoMaisVendido ? (
+                    <>
+                      <p className="text-lg font-bold text-gray-800">
+                        {dashboard.produtoMaisVendido.name}
+                      </p>
+                      <p className="text-sm font-medium text-gray-700 mt-1">
+                        ({dashboard.produtoMaisVendido.totalVendido} un. vendida(s))
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-gray-600 italic">Nenhum produto vendido</p>
+                  )}
+                </div>
+
+                {/* Produtos com baixo estoque */}
+                <div className="p-6 rounded-xl shadow text-center border-2 border-red-200">
+                  <h3 className="text-xl font-semibold text-red-700">Itens com baixo estoque</h3>
+                  <p className='text-xs text-red-700 italic mb-2'>*(estoque abaixo de 5 itens)</p>
+                  {dashboard.produtosBaixoEstoque?.length > 0 ? (
+                    <ul className="text-gray-800 space-y-1 text-sm list-disc list-inside">
+                      {/* Limita a 3 para visualização no card */}
+                      {dashboard.produtosBaixoEstoque.slice(0, 3).map((p) => (
+                        <li key={p.id}>
+                          {p.name} ({p.quantity} un.)
+                        </li>
+                      ))}
+                      
+                      {/* Se houver mais, indica a quantidade restante.*/}
+                      {dashboard.produtosBaixoEstoque.length > 3 && (
+                        <li className='text-xs italic mt-1'>
+                          e mais {dashboard.produtosBaixoEstoque.length - 3} itens...
+                        </li>
+                      )}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-600 italic">Sem produtos com estoque baixo</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-gray-400 py-12 italic select-none">Dados do dashboard indisponíveis.</p>
+            )
+          )}
+        </section>
 
         {/* Produtos */}
         <div className="flex flex-col md:flex-row gap-12">
