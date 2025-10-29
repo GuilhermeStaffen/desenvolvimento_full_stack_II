@@ -1,32 +1,32 @@
-const { Op, sequelize, fn, col, literal } = require("sequelize");
+const { Op, fn, col, literal } = require("sequelize");
 const { Order, Product, OrderItem } = require("../models");
 
 async function getDashboard(req, res) {
   try {
-    // Define o intervalo de datas (mês atual)
+
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-    
-    const summaryResult = await Order.findOne({
+
+
+    const salesSummary = await Order.findOne({
       attributes: [
-        [fn("SUM", col("Order.total")), "totalVendas"],
-        [fn("COUNT", col("Order.id")), "numeroVendas"],
+        [fn("SUM", col("Order.total")), "totalSales"],
+        [fn("COUNT", col("Order.id")), "totalOrders"],
       ],
-      // Filtro para vendas concluídas e dentro do mês
       where: {
-        status: "delivered", // Apenas pedidos entregues são vendas concluídas
-        createdAt: { 
-          [Op.between]: [startOfMonth, endOfMonth] 
+        status: "delivered",
+        
+        createdAt: {
+          [Op.between]: [startOfMonth, endOfMonth],
         },
       },
     });
 
-    //Produto mais vendido (usando OrderItem)
-    const produtoMaisVendido = await OrderItem.findOne({
+    const topSellingProduct = await OrderItem.findOne({
       attributes: [
         "productId",
-        [fn("SUM", col("OrderItem.quantity")), "totalVendido"],
+        [fn("SUM", col("OrderItem.quantity")), "totalSold"],
       ],
       include: [
         {
@@ -35,12 +35,11 @@ async function getDashboard(req, res) {
         },
       ],
       group: ["OrderItem.productId"],
-      order: [[literal("totalVendido"), "DESC"]],
+      order: [[literal("totalSold"), "DESC"]],
       limit: 1,
     });
 
-    // Produtos com baixo estoque
-    const produtosBaixoEstoque = await Product.findAll({
+    const lowStockProducts = await Product.findAll({
       where: { quantity: { [Op.lt]: 5 } },
       attributes: ["id", "name", "quantity"],
       order: [["quantity", "ASC"]],
@@ -48,19 +47,22 @@ async function getDashboard(req, res) {
     });
 
     return res.json({
-      produtoMaisVendido: produtoMaisVendido
+      topSellingProduct: topSellingProduct
         ? {
-            id: produtoMaisVendido.Product.id,
-            name: produtoMaisVendido.Product.name,
-            totalVendido: produtoMaisVendido.dataValues.totalVendido,
+            id: topSellingProduct.Product.id,
+            name: topSellingProduct.Product.name,
+            totalSold: topSellingProduct.dataValues.totalSold,
           }
         : null,
-      produtosBaixoEstoque,
-      summaryResult,
+      lowStockProducts,
+      salesSummary,
     });
   } catch (error) {
     console.error("Erro ao gerar dashboard:", error);
-    res.status(500).json({ error: "Erro ao gerar dashboard", details: error.message });
+    res.status(500).json({
+      error: "Erro ao gerar dashboard",
+      details: error.message,
+    });
   }
 }
 

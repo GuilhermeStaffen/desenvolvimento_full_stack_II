@@ -73,13 +73,6 @@ export default function AdminDashboard() {
     }
   }
 
-
-
- 
-  
-
-
-
   useEffect(() => {
     if (user?.userType === "admin") {
       loadOrders();
@@ -111,26 +104,26 @@ export default function AdminDashboard() {
                 <div className="p-6 rounded-xl shadow text-center">
                   <h3 className="text-xl font-semibold text-sea mb-2">Total de vendas do mês</h3>
                   <p className="text-2xl font-bold text-gray-800">
-                    {dashboard.summaryResult.totalVendas?.toLocaleString("pt-BR", {
+                    {dashboard.salesSummary.totalSales?.toLocaleString("pt-BR", {
                       style: "currency",
                       currency: "BRL",
                     })}
                   </p>
                   <p className="text-sm text-gray-700 mt-1">
-                    ({dashboard.summaryResult.numeroVendas} venda(s) realizada(s))
+                    ({dashboard.salesSummary.totalOrders} venda(s) realizada(s))
                   </p>
                 </div>
 
                 {/* Produto mais vendido */}
                 <div className="p-6 rounded-xl shadow text-center">
                   <h3 className="text-xl font-semibold text-sea mb-2">Produto mais vendido</h3>
-                  {dashboard.produtoMaisVendido ? (
+                  {dashboard.topSellingProduct ? (
                     <>
                       <p className="text-lg font-bold text-gray-800">
-                        {dashboard.produtoMaisVendido.name}
+                        {dashboard.topSellingProduct.name}
                       </p>
                       <p className="text-sm font-medium text-gray-700 mt-1">
-                        ({dashboard.produtoMaisVendido.totalVendido} un. vendida(s))
+                        ({dashboard.topSellingProduct.totalSold} un. vendida(s))
                       </p>
                     </>
                   ) : (
@@ -142,19 +135,19 @@ export default function AdminDashboard() {
                 <div className="p-6 rounded-xl shadow text-center border-2 border-red-200">
                   <h3 className="text-xl font-semibold text-red-700">Itens com baixo estoque</h3>
                   <p className='text-xs text-red-700 italic mb-2'>*(estoque abaixo de 5 itens)</p>
-                  {dashboard.produtosBaixoEstoque?.length > 0 ? (
+                  {dashboard.lowStockProducts?.length > 0 ? (
                     <ul className="text-gray-800 space-y-1 text-sm list-disc list-inside">
                       {/* Limita a 3 para visualização no card */}
-                      {dashboard.produtosBaixoEstoque.slice(0, 3).map((p) => (
+                      {dashboard.lowStockProducts.slice(0, 3).map((p) => (
                         <li key={p.id}>
                           {p.name} ({p.quantity} un.)
                         </li>
                       ))}
                       
                       {/* Se houver mais, indica a quantidade restante.*/}
-                      {dashboard.produtosBaixoEstoque.length > 3 && (
+                      {dashboard.lowStockProducts.length > 3 && (
                         <li className='text-xs italic mt-1'>
-                          e mais {dashboard.produtosBaixoEstoque.length - 3} itens...
+                          e mais {dashboard.lowStockProducts.length - 3} itens...
                         </li>
                       )}
                     </ul>
