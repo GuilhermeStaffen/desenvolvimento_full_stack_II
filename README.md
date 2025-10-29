@@ -30,4 +30,4 @@ npm rum dev:all
 
 ## Github Actions
 
-O yaml para execução dos testes e publicação se encontra em .github\workflows
+O yaml para execução dos testes e publicação se encontra em .github\workflows e render.yaml
