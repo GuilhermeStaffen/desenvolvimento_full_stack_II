@@ -4,11 +4,11 @@ import {
   cancelPedido,
   shipPedido,
   deliverPedido,
+  getAdminDashboard
 } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
-import { getAdminDashboard } from '../api/dashboardApi';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orderPage, setOrderPage] = useState(1);
-  const [orderTotalPages, setOrderTotalPages] = useState(1); 
+  const [orderTotalPages, setOrderTotalPages] = useState(1);
 
   const [dashboard, setDashboard] = useState(null);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
@@ -48,6 +48,10 @@ export default function AdminDashboard() {
       await cancelPedido(id);
       toast.success("Pedido cancelado com sucesso!");
       loadOrders();
+      getAdminDashboard()
+        .then((data) => setDashboard(data))
+        .catch((err) => console.error("Erro ao carregar dashboard:", err))
+        .finally(() => setLoadingDashboard(false));
     } catch {
       toast.error("Erro ao cancelar pedido");
     }
@@ -58,6 +62,10 @@ export default function AdminDashboard() {
       await shipPedido(id);
       toast.success("Pedido marcado como enviado!");
       loadOrders();
+      getAdminDashboard()
+        .then((data) => setDashboard(data))
+        .catch((err) => console.error("Erro ao carregar dashboard:", err))
+        .finally(() => setLoadingDashboard(false));
     } catch (err) {
       toast.error(err.response?.data?.error || "Erro ao enviar pedido");
     }
@@ -68,6 +76,10 @@ export default function AdminDashboard() {
       await deliverPedido(id);
       toast.success("Pedido marcado como entregue!");
       loadOrders();
+      getAdminDashboard()
+        .then((data) => setDashboard(data))
+        .catch((err) => console.error("Erro ao carregar dashboard:", err))
+        .finally(() => setLoadingDashboard(false));
     } catch (err) {
       toast.error(err.response?.data?.error || "Erro ao entregar pedido");
     }
@@ -78,9 +90,9 @@ export default function AdminDashboard() {
       loadOrders();
 
       getAdminDashboard()
-      .then((data) => setDashboard(data))
-      .catch((err) => console.error("Erro ao carregar dashboard:", err))
-      .finally(() => setLoadingDashboard(false));
+        .then((data) => setDashboard(data))
+        .catch((err) => console.error("Erro ao carregar dashboard:", err))
+        .finally(() => setLoadingDashboard(false));
     }
   }, [user]);
 
@@ -90,7 +102,7 @@ export default function AdminDashboard() {
         <h1 className="text-4xl font-bold text-center md:text-left">
           Painel Administrativo
         </h1>
-        
+
         {/* Resumo do Mês */}
         <section className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold mb-6">Resumo do mês</h2>
@@ -143,7 +155,7 @@ export default function AdminDashboard() {
                           {p.name} ({p.quantity} un.)
                         </li>
                       ))}
-                      
+
                       {/* Se houver mais, indica a quantidade restante.*/}
                       {dashboard.lowStockProducts.length > 3 && (
                         <li className='text-xs italic mt-1'>

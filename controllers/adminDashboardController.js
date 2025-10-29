@@ -1,26 +1,26 @@
-const { Op, fn, col, literal } = require("sequelize");
+const { Op, fn, col, literal, where } = require("sequelize");
 const { Order, Product, OrderItem } = require("../models");
 
 async function getDashboard(req, res) {
   try {
-
     const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+    const startOfMonth = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1, 0, 0, 0));
+    const endOfMonth = new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999));
 
+
+    const orders = await Order.findAll({
+      where: { status: "delivered" },
+      attributes: ["id", "createdAt", "total"],
+      raw: true
+    });
 
     const salesSummary = await Order.findOne({
       attributes: [
-        [fn("SUM", col("Order.total")), "totalSales"],
-        [fn("COUNT", col("Order.id")), "totalOrders"],
+        [fn("SUM", col("total")), "totalSales"],
+        [fn("COUNT", col("id")), "totalOrders"],
       ],
-      where: {
-        status: "delivered",
-        
-        createdAt: {
-          [Op.between]: [startOfMonth, endOfMonth],
-        },
-      },
+      where: literal(`status = 'delivered' AND date(createdAt) BETWEEN '${startOfMonth.toISOString().split('T')[0]}' AND '${endOfMonth.toISOString().split('T')[0]}'`)
+
     });
 
     const topSellingProduct = await OrderItem.findOne({
@@ -49,10 +49,10 @@ async function getDashboard(req, res) {
     return res.json({
       topSellingProduct: topSellingProduct
         ? {
-            id: topSellingProduct.Product.id,
-            name: topSellingProduct.Product.name,
-            totalSold: topSellingProduct.dataValues.totalSold,
-          }
+          id: topSellingProduct.Product.id,
+          name: topSellingProduct.Product.name,
+          totalSold: topSellingProduct.dataValues.totalSold,
+        }
         : null,
       lowStockProducts,
       salesSummary,

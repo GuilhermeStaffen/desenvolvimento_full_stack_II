@@ -120,6 +120,13 @@ export function cancelPedido(id) { return client.post(`/orders/${id}/canceled`);
 export function shipPedido(id) { return client.post(`/orders/${id}/shipped`); }
 export function deliverPedido(id) { return client.post(`/orders/${id}/delivered`); }
 
+
+//DASHBOARD
+export async function getAdminDashboard() {
+  const response = await client.get('/admin/dashboard');
+  return response.data;
+}
+
 export default {
   // auth
   login,
@@ -133,5 +140,6 @@ export default {
   getCart, postCart, putCart, deleteCartItem,
   // orders
   createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido,
-  rawClient: client
+  // dashboard
+  getAdminDashboard,
 };
