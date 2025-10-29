@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN npm install --only=production
 
 # Install frontend dependencies
 COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
+RUN cd frontend && npm ci --only=production
 
 # Copy all source code
 COPY . .
