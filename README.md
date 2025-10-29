@@ -27,7 +27,3 @@ npm rum dev:all
 
 * Acesse: http://localhost:3000/api-docs
 * Teste todas as rotas e veja exemplos de request/response.
-
-## Github Actions
-
-O yaml para execução dos testes e publicação se encontra em .github\workflows e render.yaml

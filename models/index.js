@@ -15,12 +15,12 @@ OrderItem.belongsTo(Order, { foreignKey: "orderId" });
 Product.hasMany(OrderItem, { foreignKey: "productId" });
 OrderItem.belongsTo(Product, { foreignKey: "productId" });
 
-Product.hasMany(ProductImage, { foreignKey: "productId", as: "images" });
-ProductImage.belongsTo(Product, { foreignKey: "productId", as: "product" });
+Product.hasMany(ProductImage, { foreignKey: "productId" });
+ProductImage.belongsTo(Product, { foreignKey: "productId" });
 
 async function syncDatabase() {
   try {
-    await sequelize.sync({ force: process.env.NODE_ENV !== 'production' });
+    await sequelize.sync({});
     console.log('Banco sincronizado com sucesso!');
   } catch (error) {
     console.error('Erro ao sincronizar DB:', error);
