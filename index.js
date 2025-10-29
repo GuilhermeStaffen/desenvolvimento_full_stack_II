@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const ordersRoutes = require('./routes/orders');
 const supplierRoutes = require('./routes/suppliers');
+const adminDashboardRoutes = require('./routes/adminDashboard');
 
 app.use(express.json());
 app.use('/api/users', userRoutes);
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/admin', adminDashboardRoutes);
 
 syncDatabase(); 
 swaggerDocs(app);
