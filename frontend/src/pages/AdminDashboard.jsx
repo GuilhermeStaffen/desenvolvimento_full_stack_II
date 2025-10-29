@@ -1,24 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
-  listProdutos,
-  createProduto,
-  updateProduto,
-  deleteProduto,
   listPedidos,
   cancelPedido,
   shipPedido,
   deliverPedido,
-  getSupplier,
-  listSuppliers,
-  createSupplier,
-  updateSupplier,
-  deleteSupplier
 } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import ProtectedRoute from "../components/PrivateRoute";
 import toast from "react-hot-toast";
-import CustomForm from "../components/CustomForm";
-import CustomListGrid from "../components/CustomListGrid";
 import { getAdminDashboard } from '../api/dashboardApi';
 
 export default function AdminDashboard() {
