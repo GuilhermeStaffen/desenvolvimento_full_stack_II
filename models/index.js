@@ -5,9 +5,14 @@ const Cart = require('./Cart');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
 const ProductImage = require('./ProductImage');
+const Supplier = require('./Supplier');
 
-Order.belongsTo(User);
-User.hasMany(Order);
+User.hasMany(Order, { foreignKey: 'userId' });
+Order.belongsTo(User, {
+  foreignKey: 'userId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+});
 
 Order.hasMany(OrderItem, { foreignKey: "orderId" });
 OrderItem.belongsTo(Order, { foreignKey: "orderId" });
@@ -18,6 +23,9 @@ OrderItem.belongsTo(Product, { foreignKey: "productId" });
 Product.hasMany(ProductImage, { foreignKey: "productId" });
 ProductImage.belongsTo(Product, { foreignKey: "productId" });
 
+Supplier.hasMany(Product, { foreignKey: 'supplierId', as: 'products' });
+Product.belongsTo(Supplier, { foreignKey: 'supplierId', as: 'supplier' });
+
 async function syncDatabase() {
   try {
     await sequelize.sync({});
@@ -27,4 +35,4 @@ async function syncDatabase() {
   }
 }
 
-module.exports = { sequelize, User, Product, Cart, Order, OrderItem, ProductImage, syncDatabase };
+module.exports = { sequelize, User, Product, Cart, Order, OrderItem, ProductImage, syncDatabase, Supplier };

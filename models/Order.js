@@ -26,11 +26,4 @@ const Order = sequelize.define('Order', {
     timestamps: true
 });
 
-User.hasMany(Order, { foreignKey: 'userId' });
-Order.belongsTo(User, {
-  foreignKey: 'userId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
-
 module.exports = Order;
