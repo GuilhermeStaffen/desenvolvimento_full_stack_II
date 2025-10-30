@@ -31,18 +31,5 @@ const OrderItem = sequelize.define('OrderItem', {
   timestamps: false
 });
 
-Order.hasMany(OrderItem, { foreignKey: 'orderId' });
-OrderItem.belongsTo(Order, {
-  foreignKey: 'orderId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
-
-Product.hasMany(OrderItem, { foreignKey: 'productId' });
-OrderItem.belongsTo(Product, {
-  foreignKey: 'productId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE',
-});
 
 module.exports = OrderItem;

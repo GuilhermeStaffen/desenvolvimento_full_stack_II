@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const swaggerDocs = require("./config/swagger");
-const { syncDatabase } = require('./models');
+const { syncDatabase, applyAssociations } = require('./models');
 
 // habilita CORS para qualquer origem
 app.use(cors());
@@ -27,6 +27,7 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/admin', adminDashboardRoutes);
 
 syncDatabase(); 
+applyAssociations();
 swaggerDocs(app);
 
 const PORT = 3000;

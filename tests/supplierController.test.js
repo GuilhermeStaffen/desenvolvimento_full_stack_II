@@ -7,6 +7,11 @@ jest.mock('../models/Supplier', () => ({
   count: jest.fn(),
   findByPk: jest.fn(),
   destroy: jest.fn(),
+  hasMany: jest.fn(),
+}));
+
+jest.mock('../models/Product', () => ({
+  belongsTo: jest.fn(),
 }));
 
 const mockResponse = () => {
