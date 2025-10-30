@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const Supplier = require('./Supplier');
 const sequelize = require('../config/database');
 
 const Product = sequelize.define('Product', {
@@ -27,6 +28,15 @@ const Product = sequelize.define('Product', {
   updatedBy: {
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  supplierId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: Supplier,
+      key: 'id'
+    },
+    onDelete: 'SET NULL',
   }
 }, {
   tableName: 'products',

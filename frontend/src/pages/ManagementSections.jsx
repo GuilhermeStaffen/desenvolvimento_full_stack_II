@@ -49,6 +49,7 @@ export default function ManagementSection() {
         price: Number(prod.price),
         quantity: Number(prod.quantity),
         images: prod.images,
+        supplierId: prod.supplierId,
       };
 
       if (prod.id) {
@@ -123,8 +124,6 @@ export default function ManagementSection() {
     }
   }
 
-
-
   useEffect(() => {
     if (user?.userType === "admin") {
       loadProducts();
@@ -154,6 +153,7 @@ export default function ManagementSection() {
                 { name: "quantity", type: "number", label: "Quantidade" },
                 { name: "images", type: "array", label: "Imagens" },
                 { name: "description", type: "textarea", label: "Descrição" },
+                { name: "supplierId", type: "select", label: "Fornecedor", value: selectedProduct?.supplierId, options: suppliers.map(s => ({ value: s.id, label: s.name })) },
               ]}
             />
           </section>

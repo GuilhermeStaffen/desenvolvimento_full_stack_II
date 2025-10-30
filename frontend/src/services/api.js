@@ -32,6 +32,7 @@ function normalizeProduct(p) {
     price: Number(p.price ?? 0),
     quantity: Number(p.quantity ?? 0),
     images: p.images ?? null,
+    supplierId: p.supplierId ?? null,
     raw: p
   };
 }

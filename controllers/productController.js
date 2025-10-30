@@ -1,13 +1,20 @@
-const { Product, ProductImage } = require('../models');
+const { Product, ProductImage, Supplier } = require('../models');
 const { Op } = require('sequelize');
 
 const productController = {
   async create(req, res) {
     try {
-      const { name, price, description, quantity, images } = req.body;
+      const { name, price, description, quantity, images, supplierId } = req.body;
 
       if (!name || !description || price === undefined || quantity === undefined) {
         return res.status(400).json({ error: 'Name, price, description e quantity são obrigatórios.' });
+      }
+
+      if (supplierId) {
+        const supplierExists = await Supplier.findByPk(supplierId);
+        if (!supplierExists) {
+          return res.status(400).json({ error: 'Fornecedor não encontrado.' });
+        }
       }
 
       const product = await Product.create({
@@ -16,7 +23,8 @@ const productController = {
         description,
         quantity,
         createdBy: req.user.id,
-        updatedBy: req.user.id
+        updatedBy: req.user.id,
+        supplierId
       });
 
       if (Array.isArray(images) && images.length > 0) {
@@ -32,7 +40,10 @@ const productController = {
       }
 
       const productWithImages = await Product.findByPk(product.id, {
-        include: { model: ProductImage, as: 'images', attributes: ['url'] }
+        include: [
+          { model: ProductImage, as: 'images', attributes: ['url'] },
+          { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'email'] }
+        ]
       });
 
       res.status(201).json(productWithImages);
@@ -48,19 +59,27 @@ const productController = {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { name, price, description, quantity, images } = req.body;
+      const { name, price, description, quantity, images, supplierId } = req.body;
 
       const product = await Product.findByPk(id, {
         include: { model: ProductImage, as: 'images' }
       });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
       
+      if (supplierId) {
+        const supplierExists = await Supplier.findByPk(supplierId);
+        if (!supplierExists) {
+          return res.status(400).json({ error: 'Fornecedor não encontrado.' });
+        }
+      }
+      
       await product.update({
         name: name ?? product.name,
         price: price ?? product.price,
         quantity: quantity ?? product.quantity,
         description: description ?? product.description,
-        updatedBy: req.user.id
+        updatedBy: req.user.id,
+        supplierId: supplierId ?? product.supplierId
       });
 
       if (Array.isArray(images)) {
@@ -84,7 +103,10 @@ const productController = {
       }
 
       const productWithImages = await Product.findByPk(product.id, {
-        include: { model: ProductImage, as: 'images', attributes: ['url'] }
+        include: [
+          { model: ProductImage, as: 'images', attributes: ['url'] },
+          { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'email'] }
+        ]
       });
 
       res.json(productWithImages);
@@ -130,7 +152,10 @@ const productController = {
         where,
         limit: limitNumber,
         offset,
-        include: { model: ProductImage, as: 'images', attributes: ['url'] }
+        include: [
+          { model: ProductImage, as: 'images', attributes: ['url'] },
+          { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'email'] }
+        ]
       });
 
       const totalPages = Math.ceil(totalItems / limitNumber);
@@ -151,7 +176,10 @@ const productController = {
     try {
       const { id } = req.params;
       const product = await Product.findByPk(id, {
-        include: { model: ProductImage, as: 'images', attributes: ['url'] }
+        include: [
+          { model: ProductImage, as: 'images', attributes: ['url'] },
+          { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'email'] }
+        ]
       });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
       res.status(200).json(product);

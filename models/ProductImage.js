@@ -20,7 +20,6 @@ const ProductImage = sequelize.define('ProductImage', {
   timestamps: true
 });
 
-Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
-ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
 
 module.exports = ProductImage;

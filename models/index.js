@@ -5,18 +5,55 @@ const Cart = require('./Cart');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
 const ProductImage = require('./ProductImage');
+const Supplier = require('./Supplier');
 
-Order.belongsTo(User);
-User.hasMany(Order);
+function applyAssociations() {
+  User.hasMany(Order, { foreignKey: 'userId' });
+  Order.belongsTo(User, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
 
-Order.hasMany(OrderItem, { foreignKey: "orderId" });
-OrderItem.belongsTo(Order, { foreignKey: "orderId" });
+  User.hasMany(Cart, { foreignKey: 'userId' });
+  Cart.belongsTo(User, {
+    foreignKey: 'userId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
 
-Product.hasMany(OrderItem, { foreignKey: "productId" });
-OrderItem.belongsTo(Product, { foreignKey: "productId" });
+  Product.hasMany(Cart, { foreignKey: 'productId' });
+  Cart.belongsTo(Product, {
+    foreignKey: 'productId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
 
-Product.hasMany(ProductImage, { foreignKey: "productId" });
-ProductImage.belongsTo(Product, { foreignKey: "productId" });
+  Order.hasMany(OrderItem, { foreignKey: 'orderId' });
+  OrderItem.belongsTo(Order, {
+    foreignKey: 'orderId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+
+  Product.hasMany(OrderItem, { foreignKey: 'productId' });
+  OrderItem.belongsTo(Product, {
+    foreignKey: 'productId',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+
+  Product.hasMany(OrderItem, { foreignKey: "productId" });
+  OrderItem.belongsTo(Product, { foreignKey: "productId" });
+
+  Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
+  ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+  Supplier.hasMany(Product, { foreignKey: 'supplierId', as: 'products' });
+  Product.belongsTo(Supplier, { foreignKey: 'supplierId', as: 'supplier' });
+}
+
+
 
 async function syncDatabase() {
   try {
@@ -27,4 +64,4 @@ async function syncDatabase() {
   }
 }
 
-module.exports = { sequelize, User, Product, Cart, Order, OrderItem, ProductImage, syncDatabase };
+module.exports = { sequelize, User, Product, Cart, Order, OrderItem, ProductImage, syncDatabase, applyAssociations, Supplier };

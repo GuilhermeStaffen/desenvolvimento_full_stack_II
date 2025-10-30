@@ -1,4 +1,5 @@
-const Supplier = require('../models/Supplier');
+const { Supplier } = require('../models');
+const { Op } = require('sequelize');
 
 const supplierController = {
 
@@ -33,7 +34,7 @@ const supplierController = {
             const where = {};
 
             if (name) where.name = { [Op.like]: `%${name}%` };
-            if (cnpj) where.price = price;
+            if (cnpj) where.cnpj = cnpj;
 
             const pageNumber = parseInt(page, 10);
             const limitNumber = parseInt(limit, 10);
