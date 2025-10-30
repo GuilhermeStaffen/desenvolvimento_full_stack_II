@@ -13,6 +13,8 @@ import {
   Bar,
 } from "recharts";
 import api from "../services/api";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ----------------- COMPONENTS -----------------
 const ReportFilters = ({ filters, setFilters }) => {
@@ -103,7 +105,6 @@ const SalesByStatusChart = ({ data }) => {
     );
   }
 
-  // group by status
   const map = {};
   data.forEach(d => {
     const s = d.status || "placed";
@@ -129,48 +130,73 @@ const SalesByStatusChart = ({ data }) => {
 };
 
 // Sales Table
-const SalesTable = ({ data }) => (
-  <div className="bg-white p-8 rounded-xl shadow-lg">
-    <h2 className="text-2xl font-semibold mb-6">Tabela de Vendas ({data.length} resultados)</h2>
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Venda</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lucro</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.slice(0, 10).map(sale => (
-            <tr key={sale.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sale.id}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {new Date(sale.date).toLocaleDateString()}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.status}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                ${(sale.saleValue || 0).toFixed(2)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                ${(sale.profit || 0).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-          {data.length > 10 && (
+const SalesTable = ({ data }) => {
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Relatório de Vendas", 14, 15);
+
+    autoTable(doc, {
+      head: [["ID", "Data", "Status", "Total Venda", "Lucro"]],
+      body: data.map(sale => [
+        sale.id,
+        new Date(sale.date).toLocaleDateString(),
+        sale.status,
+        (sale.saleValue || 0).toFixed(2),
+        (sale.profit || 0).toFixed(2),
+      ]),
+      startY: 25,
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save("relatorio-vendas.pdf");
+  };
+
+  return (
+    <div className="bg-white p-8 rounded-xl shadow-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Tabela de Vendas ({data.length} resultados)</h2>
+        <button
+          onClick={exportPDF}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          Exportar PDF
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan="5" className="text-center py-4 text-sm text-gray-500 italic">
-                ... e {data.length - 10} outras vendas
-              </td>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Venda</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lucro</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.map(sale => (
+              <tr key={sale.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sale.id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(sale.date).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sale.status}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  ${(sale.saleValue || 0).toFixed(2)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                  ${(sale.profit || 0).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ----------------- Main Component -----------------
 export default function Report() {
