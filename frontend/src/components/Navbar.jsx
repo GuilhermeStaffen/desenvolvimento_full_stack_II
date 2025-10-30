@@ -65,6 +65,15 @@ export default function Navbar() {
               )}
               {user.userType === "admin" && (
                 <Link
+                  to="/relatorios"
+                  className="hover:text-sea font-medium transition duration-150"
+                  aria-label="Página relatórios admin"
+                >
+                  Relatórios
+                </Link>
+              )}
+              {user.userType === "admin" && (
+                <Link
                   to="/admin/cadastros"
                   className="hover:text-sea font-medium transition duration-150"
                   aria-label="Página de Cadastros"
