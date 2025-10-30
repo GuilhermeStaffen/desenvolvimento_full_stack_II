@@ -88,6 +88,16 @@ export function createProduto(body) { return client.post("/products", body); }
 export function updateProduto(id, body) { return client.put(`/products/${id}`, body); }
 export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 
+export async function listVendas() {
+  try {
+    const response = await client.get('/report');
+    return response;
+  } catch (error) {
+    console.error("Erro ao carregar dados de vendas da API:", error);
+    throw error; 
+  }
+}
+
 export async function listSuppliers(params = {}) {
   const res = await client.get("/suppliers", { params });
   const payload = res.data ?? {};
@@ -140,7 +150,7 @@ export default {
   // cart
   getCart, postCart, putCart, deleteCartItem,
   // orders
-  createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido,
+  createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido, listVendas,
   // dashboard
   getAdminDashboard,
 };
