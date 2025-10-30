@@ -12,7 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/PrivateRoute";
 import ManagementSections from "./pages/ManagementSections";
-import Relatorios from "./pages/Relatorios";
+import Report from "./pages/Report";
 
 export default function App() {
   return (
@@ -29,7 +29,7 @@ export default function App() {
         <Route path="/meus-pedidos" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/cadastros" element={<ProtectedRoute adminOnly={true}><ManagementSections /></ProtectedRoute>} />
-        <Route path="/relatorios" element={<ProtectedRoute adminOnly={true}><Relatorios /></ProtectedRoute>}/>
+        <Route path="/relatorios" element={<ProtectedRoute adminOnly={true}><Report /></ProtectedRoute>}/>
         <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </div>

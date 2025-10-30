@@ -88,7 +88,7 @@ export function createProduto(body) { return client.post("/products", body); }
 export function updateProduto(id, body) { return client.put(`/products/${id}`, body); }
 export function deleteProduto(id) { return client.delete(`/products/${id}`); }
 
-export async function listVendas() {
+export async function listSales() {
   try {
     const response = await client.get('/report');
     return response;
@@ -150,7 +150,7 @@ export default {
   // cart
   getCart, postCart, putCart, deleteCartItem,
   // orders
-  createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido, listVendas,
+  createPedido, listPedidos, listMyOrders, cancelPedido, shipPedido, deliverPedido, listSales,
   // dashboard
   getAdminDashboard,
 };

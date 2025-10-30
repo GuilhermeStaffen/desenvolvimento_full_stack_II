@@ -2,7 +2,7 @@ const { Order, OrderItem, Product } = require('../models');
 
 async function getSalesData(req, res) {
   try {
-    // Busca pedidos com itens e produtos relacionados
+    // Fetch orders with related items and products
     const orders = await Order.findAll({
       attributes: ['id', 'createdAt', 'status'],
       include: [
@@ -20,7 +20,7 @@ async function getSalesData(req, res) {
       order: [['createdAt', 'DESC']],
     });
 
-    // Se não houver pedidos, retorna estrutura vazia
+    // If there are no orders, return empty structure
     if (!orders || orders.length === 0) {
       return res.json({
         summary: { totalSales: 0, totalProfit: 0, totalOrders: 0 },
@@ -30,66 +30,68 @@ async function getSalesData(req, res) {
       });
     }
 
-    // Acumuladores
+    // Accumulators
     let totalSales = 0;
     let totalProfit = 0;
-    const monthlyMap = {}; // { '2025-10': 1234.56 }
-    const productSales = {}; // { 'Isca X': 10 }
+    const monthlySalesMap = {}; // { '2025-10': 1234.56 }
+    const productQuantities = {}; // { 'Product X': 10 }
 
-    // Map orders -> formato frontend
-    const ordersForFrontend = orders.map(order => {
-      // Sequelize por padrão coloca os includes no plural 'OrderItems'
+    // Map orders -> frontend format
+    const formattedOrders = orders.map(order => {
+      // Sequelize often returns includes as pluralized names
       const items = (order.OrderItems || order.order_items || order.products || []).map(item => {
         const product = item.Product || {};
-        const quantidade = Number(item.quantity || 0);
-        // prefer subtotal se presente, senão unitPrice * quantidade
-        const unitPrice = item.unitPrice != null ? Number(item.unitPrice) : (product.price != null ? Number(product.price) : 0);
-        const subtotal = item.subtotal != null ? Number(item.subtotal) : unitPrice * quantidade;
+        const quantity = Number(item.quantity || 0);
+        // prefer subtotal if present, otherwise unitPrice * quantity
+        const unitPrice = item.unitPrice != null
+          ? Number(item.unitPrice)
+          : (product.price != null ? Number(product.price) : 0);
+        const subtotal = item.subtotal != null ? Number(item.subtotal) : unitPrice * quantity;
         const costPrice = product.costPrice != null ? Number(product.costPrice) : 0;
 
-        // acumula por produto (topProducts)
-        const nome = product.name || `produto-${product.id || item.productId || 'unknown'}`;
-        productSales[nome] = (productSales[nome] || 0) + quantidade;
+        // accumulate per product (for topProducts)
+        const name = product.name || `product-${product.id || item.productId || 'unknown'}`;
+        productQuantities[name] = (productQuantities[name] || 0) + quantity;
 
         return {
-          produto: nome,
-          quantidade,
-          precoUnitario: unitPrice,
-          custoUnitario: costPrice,
+          product: name,
+          quantity,
+          unitPrice,
+          costPrice,
           subtotal,
         };
       });
 
-      // soma valor venda e custo total
-      const valorVenda = items.reduce((s, it) => s + (Number(it.precoUnitario || 0) * Number(it.quantidade || 0)), 0);
-      const custoTotal = items.reduce((s, it) => s + (Number(it.custoUnitario || 0) * Number(it.quantidade || 0)), 0);
-      const lucro = valorVenda - custoTotal;
+      // calculate total sale value and total cost
+      const saleValue = items.reduce((sum, it) => sum + (Number(it.unitPrice || 0) * Number(it.quantity || 0)), 0);
+      const totalCost = items.reduce((sum, it) => sum + (Number(it.costPrice || 0) * Number(it.quantity || 0)), 0);
+      const profit = saleValue - totalCost;
 
-      totalSales += valorVenda;
-      totalProfit += lucro;
+      totalSales += saleValue;
+      totalProfit += profit;
 
       // monthly key YYYY-MM
       const createdAt = order.createdAt || new Date();
       const monthKey = createdAt.toISOString().slice(0, 7);
-      monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + valorVenda;
+      monthlySalesMap[monthKey] = (monthlySalesMap[monthKey] || 0) + saleValue;
 
       return {
-        id: order.id != null ? String(order.id) : (new Date(createdAt).getTime()).toString(),
-        data: createdAt.toISOString(),
+        id: order.id != null ? String(order.id) : new Date(createdAt).getTime().toString(),
+        date: createdAt.toISOString(),
         status: order.status || 'placed',
-        itens: items,
-        valorVenda,
-        lucro,
+        items,
+        saleValue,
+        profit,
       };
     });
 
-    // Constrói monthly array ordenado por month asc
-    const monthly = Object.entries(monthlyMap)
+    // Build monthly array sorted ascending by month
+    const monthly = Object.entries(monthlySalesMap)
       .map(([month, value]) => ({ month, value }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // Top products por quantidade
-    const topProducts = Object.entries(productSales)
+    // Top products by quantity
+    const topProducts = Object.entries(productQuantities)
       .map(([name, quantity]) => ({ name, quantity }))
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10);
@@ -97,18 +99,18 @@ async function getSalesData(req, res) {
     const summary = {
       totalSales,
       totalProfit,
-      totalOrders: ordersForFrontend.length,
+      totalOrders: formattedOrders.length,
     };
 
     return res.json({
       summary,
       monthly,
       topProducts,
-      orders: ordersForFrontend,
+      orders: formattedOrders,
     });
   } catch (error) {
-    console.error("Erro ao buscar dados de vendas para relatório:", error);
-    return res.status(500).json({ message: "Erro ao gerar relatório", error: error.message });
+    console.error("Error fetching sales data for report:", error);
+    return res.status(500).json({ message: "Error generating report", error: error.message });
   }
 }
 

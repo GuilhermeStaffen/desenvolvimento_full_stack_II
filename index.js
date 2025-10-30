@@ -16,7 +16,7 @@ const cartRoutes = require('./routes/cart');
 const ordersRoutes = require('./routes/orders');
 const supplierRoutes = require('./routes/suppliers');
 const adminDashboardRoutes = require('./routes/adminDashboard');
-const reportRoutes = require('./routes/reportRoutes');
+const reportRoutes = require('./routes/report');
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
