@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: .
+    container_name: fullstackII-backend
+    # mantém a mesma porta do README (Swagger)
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # Se seu .env tiver outras variáveis, use env_file abaixo
+      # PORT: "3000"
+    # Monta o banco SQLite para persistir fora do container
+    volumes:
+      - ./database.sqlite:/app/database.sqlite
+      # opcional: montar só scripts/seed
+      # - ./scriptDados.sql:/app/scriptDados.sql:ro
+      - ./:/app     # monta o código
+      - /app/node_modules  # evita sobrescrever node_modules
+    # Caso você tenha um .env, descomente:
+    # env_file:
+    #   - ./.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
