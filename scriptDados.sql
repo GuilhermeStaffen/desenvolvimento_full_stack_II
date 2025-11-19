@@ -102,3 +102,10 @@ INSERT INTO cart (id, userId, productId, quantity, createdAt, updatedAt) VALUES
 (9, 2, 1, 2, '2025-09-30 21:29:53.090+00', '2025-09-30 21:29:55.198+00'),
 (10, 2, 2, 1, '2025-09-30 21:29:57.055+00', '2025-09-30 21:29:57.055+00'),
 (11, 2, 3, 1, '2025-09-30 21:30:08.714+00', '2025-09-30 21:30:08.714+00');
+
+UPDATE order_items
+SET unitPrice = (
+    SELECT price 
+    FROM products 
+    WHERE products.id = order_items.productId
+);
