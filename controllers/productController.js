@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const productController = {
   async create(req, res) {
     try {
-      const { name, price, description, quantity, images, supplierId } = req.body;
+      const { name, price, costPrice, description, quantity, images, supplierId } = req.body;
 
       if (!name || !description || price === undefined || quantity === undefined) {
         return res.status(400).json({ error: 'Name, price, description e quantity são obrigatórios.' });
@@ -20,6 +20,7 @@ const productController = {
       const product = await Product.create({
         name,
         price,
+        costPrice,
         description,
         quantity,
         createdBy: req.user.id,
@@ -59,7 +60,7 @@ const productController = {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { name, price, description, quantity, images, supplierId } = req.body;
+      const { name, price, costPrice, description, quantity, images, supplierId } = req.body;
 
       const product = await Product.findByPk(id, {
         include: { model: ProductImage, as: 'images' }
@@ -76,6 +77,7 @@ const productController = {
       await product.update({
         name: name ?? product.name,
         price: price ?? product.price,
+        costPrice: costPrice ?? product.costPrice,
         quantity: quantity ?? product.quantity,
         description: description ?? product.description,
         updatedBy: req.user.id,
@@ -158,6 +160,8 @@ const productController = {
         ]
       });
 
+
+
       const totalPages = Math.ceil(totalItems / limitNumber);
 
       res.status(200).json({
@@ -182,6 +186,8 @@ const productController = {
         ]
       });
       if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
+
+
       res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ error: error.message });
