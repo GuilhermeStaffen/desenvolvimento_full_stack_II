@@ -30,6 +30,7 @@ function normalizeProduct(p) {
     name: p.name ?? "",
     description: p.description ?? "",
     price: Number(p.price ?? 0),
+    costPrice: Number(p.costPrice ?? 0),
     quantity: Number(p.quantity ?? 0),
     images: p.images ?? null,
     supplierId: p.supplierId ?? null,

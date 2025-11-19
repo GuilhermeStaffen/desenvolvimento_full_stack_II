@@ -47,6 +47,7 @@ export default function ManagementSection() {
         name: prod.name,
         description: prod.description,
         price: Number(prod.price),
+        costPrice: Number(prod.costPrice),
         quantity: Number(prod.quantity),
         images: prod.images,
         supplierId: prod.supplierId,
@@ -150,6 +151,7 @@ export default function ManagementSection() {
               fields={[
                 { name: "name", type: "text", label: "Nome" },
                 { name: "price", type: "number", label: "Preço" },
+                { name: "costPrice", type: "number", label: "Custo" },
                 { name: "quantity", type: "number", label: "Quantidade" },
                 { name: "images", type: "array", label: "Imagens" },
                 { name: "description", type: "textarea", label: "Descrição" },
