@@ -10,19 +10,16 @@ const Supplier = sequelize.define('Supplier', {
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
             isEmail: true
         }
     },
     website: {
         type: DataTypes.STRING,
-        allowNull: true,
-        unique: true
+        allowNull: true
     },
     cnpj: {
         type: DataTypes.STRING,
-        unique: true,
         allowNull: false
     },
     phone: {

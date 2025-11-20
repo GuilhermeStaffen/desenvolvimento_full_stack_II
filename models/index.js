@@ -57,7 +57,7 @@ function applyAssociations() {
 
 async function syncDatabase() {
   try {
-    await sequelize.sync({});
+    await sequelize.sync({ });
     console.log('Banco sincronizado com sucesso!');
   } catch (error) {
     console.error('Erro ao sincronizar DB:', error);
