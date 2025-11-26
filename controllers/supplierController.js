@@ -7,10 +7,6 @@ const supplierController = {
         try {
             const { name, email, cnpj, phone, website } = req.body;
 
-            if (!name || !email || !cnpj || !phone) {
-                return res.status(400).json({ error: 'Nome, email, cnpj e telefone são obrigatórios' });
-            }
-
             const supplier = await Supplier.create({
                 name,
                 email,
