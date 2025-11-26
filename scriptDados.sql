@@ -103,6 +103,8 @@ INSERT INTO cart (id, userId, productId, quantity, createdAt, updatedAt) VALUES
 (10, 2, 2, 1, '2025-09-30 21:29:57.055+00', '2025-09-30 21:29:57.055+00'),
 (11, 2, 3, 1, '2025-09-30 21:30:08.714+00', '2025-09-30 21:30:08.714+00');
 
+update products set costPrice = price * 0.6 where costPrice is 0;
+
 UPDATE order_items
 SET unitPrice = (
     SELECT price 
